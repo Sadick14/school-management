@@ -30,7 +30,7 @@
                 <div class="box box-info">
                     <div class="box-header">
                         <div class="box-tools pull-right">
-                            <a class="btn btn-info btn-sm" href="{{ URL::route('hrm.employee.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
+                            <a class="btn btn-add-new btn-sm" href="{{ URL::route('hrm.employee.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
                         </div>
                     </div>
                     <!-- /.box-header -->
@@ -80,11 +80,14 @@
                                             <a title="Details"  href="{{URL::route('hrm.employee.show',$employee->id)}}"  class="btn btn-primary btn-sm"><i class="fa fa-eye"></i>
                                             </a>
                                         </div>
-                                        @if($employee->role->id != AppHelper::USER_TEACHER)
                                         <div class="btn-group">
-                                            <a title="Edit" href="{{URL::route('hrm.employee.edit',$employee->id)}}" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
-                                            </a>
+                                            @if($employee->role->id == AppHelper::USER_TEACHER)
+                                                <a title="Edit" href="{{URL::route('teacher.edit',$employee->id)}}" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
+                                            @else
+                                                <a title="Edit" href="{{URL::route('hrm.employee.edit',$employee->id)}}" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
+                                            @endif
                                         </div>
+                                        @if($employee->role->id != AppHelper::USER_TEACHER)
                                         <!-- todo: have problem in mobile device -->
                                         <div class="btn-group">
                                             <form  class="myAction" method="POST" action="{{URL::route('hrm.employee.destroy', $employee->id)}}">

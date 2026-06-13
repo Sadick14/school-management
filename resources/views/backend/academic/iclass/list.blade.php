@@ -30,7 +30,7 @@
                 <div class="box box-info">
                     <div class="box-header">
                         <div class="box-tools pull-right">
-                            <a class="btn btn-info btn-sm" href="{{ URL::route('academic.class_create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
+                            <a class="btn btn-add-new btn-sm" href="{{ URL::route('academic.class_create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
                         </div>
                     </div>
                     <!-- /.box-header -->
@@ -40,15 +40,15 @@
                             <thead>
                             <tr>
                                 <th width="5%">#</th>
-                                <th width="25%">Name</th>
+                                <th width="18%">Name</th>
                                 <th width="5%">Numeric Value</th>
                                 <th width="8%">Order</th>
                                 <th width="7%">Group</th>
                                 <th width="5%">Duration</th>
                                 <th width="5%">Have Selective</th>
                                 <th width="5%">Max Selective</th>
-                                <th width="5%">Have Elective</th>
-                                <th width="10%">Note</th>
+                                <th width="15%">Subjects</th>
+                                <th width="7%">Note</th>
                                 <th width="10%">Status</th>
                                 <th class="notexport" width="10%">Action</th>
                             </tr>
@@ -74,11 +74,7 @@
                                     <td>
                                         {{$iclass->max_selective_subject}}
                                     </td>
-                                    <td>
-                                        @if($iclass->have_elective_subject)
-                                            <span class="badge bg-green">Yes</span>
-                                        @endif
-                                    </td>
+                                    <td>{{ $iclass->subjects->pluck('name')->implode(', ') }}</td>
                                     <td>{{ $iclass->note }}</td>
                                     <td>
                                         <!-- todo: have problem in mobile device -->
@@ -108,15 +104,15 @@
                             <tfoot>
                             <tr>
                                 <th width="5%">#</th>
-                                <th width="25%">Name</th>
+                                <th width="18%">Name</th>
                                 <th width="5%">Numeric Value</th>
                                 <th width="8%">Order</th>
                                 <th width="7%">Group</th>
                                 <th width="5%">Duration</th>
                                 <th width="5%">Have Selective</th>
                                 <th width="5%">Max Selective</th>
-                                <th width="5%">Have Elective</th>
-                                <th width="10%">Note</th>
+                                <th width="15%">Subjects</th>
+                                <th width="7%">Note</th>
                                 <th width="10%">Status</th>
                                 <th class="notexport" width="10%">Action</th>
                             </tr>

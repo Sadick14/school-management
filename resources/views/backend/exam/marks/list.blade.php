@@ -27,7 +27,7 @@
                 <div class="box box-info">
                     <div class="box-header">
                         <div class="box-tools pull-right">
-                            <a class="btn btn-info btn-sm" href="{{ URL::route('marks.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
+                            <a class="btn btn-add-new btn-sm" href="{{ URL::route('marks.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
                         </div>
                     </div>
                     <!-- /.box-header -->

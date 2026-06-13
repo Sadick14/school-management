@@ -53,15 +53,6 @@
      <!-- Extra js from child page -->
      @yield("extraScript")
     <!-- END JAVASCRIPT -->
-    <script>
-        // Disable CRV error modal completely
-        window.crv = {
-            showModal: function() { return false; },
-            errorModal: function() { return false; },
-            notify: function() { return false; },
-            error: function() { return false; }
-        };
-    </script>
 </body>
 
 </html>

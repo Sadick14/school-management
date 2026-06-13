@@ -123,7 +123,7 @@ class StudentController extends Controller
         $gender = 0;
         $religion = 0;
         $bloodGroup = 0;
-        $nationality = 'Bangladeshi';
+        $nationality = 'Ghana';
         $group = 'None';
         $shift = 'Day';
         $regiInfo = null;
@@ -222,11 +222,11 @@ class StudentController extends Controller
             'password' => 'nullable|min:6|max:50',
             'email' => 'nullable|email|max:255|unique:students,email',
             'class_id' => 'required|integer',
-            'section_id' => 'required|integer',
+            'section_id' => 'nullable|integer',
             'shift' => 'nullable|max:15',
             'roll_no' => 'nullable|integer',
             'board_regi_no' => 'nullable|max:50',
-            'core_subjects' => 'required|array',
+            'core_subjects' => 'nullable|array',
             'selective_subjects' => 'nullable|array',
             'fourth_subject' => 'nullable|integer',
             'house' => 'nullable|max:100',
@@ -255,12 +255,15 @@ class StudentController extends Controller
          */
         $classId = $request->get("class_id",0);
         $sectionId = $request->get("section_id",0);
-        $section = Section::where('id', $sectionId)->where('status', AppHelper::ACTIVE)
-            ->where('class_id', $classId)->select('id','capacity','class_id')->first();
-        if(!$section){
-            return redirect()->route('student.create')
-                ->with("error", 'Wrong class and section selection!')
-                ->withInput();
+        $section = null;
+        if ($sectionId) {
+            $section = Section::where('id', $sectionId)->where('status', AppHelper::ACTIVE)
+                ->where('class_id', $classId)->select('id','capacity','class_id')->first();
+            if(!$section){
+                return redirect()->route('student.create')
+                    ->with("error", 'Wrong class and section selection!')
+                    ->withInput();
+            }
         }
         //end
 
@@ -292,28 +295,32 @@ class StudentController extends Controller
         }
 
         //Other validations
-        $studentInDesireSection = Registration::where('academic_year_id', $acYearId)
-            ->where('class_id', $section->class_id)
-            ->where('section_id', $section->id)
-            ->count();
-        $studentInDesireSection += 1;
+        if ($section) {
+            $studentInDesireSection = Registration::where('academic_year_id', $acYearId)
+                ->where('class_id', $section->class_id)
+                ->where('section_id', $section->id)
+                ->count();
+            $studentInDesireSection += 1;
 
-        if($studentInDesireSection > $section->capacity){
-            return redirect()->route('student.create')
-                ->with("error", 'This section is full! Register student in another section.')
-                ->withInput();
+            if($studentInDesireSection > $section->capacity){
+                return redirect()->route('student.create')
+                    ->with("error", 'This section is full! Register student in another section.')
+                    ->withInput();
+            }
         }
 
-        $duplicateRollNo = Registration::where('status', AppHelper::ACTIVE)
-            ->where('class_id', $classId)
-            ->where('academic_year_id', $acYearId)
-            ->where('roll_no', $request->get('roll_no', 0))
-            ->count();
+        if ($request->filled('roll_no')) {
+            $duplicateRollNo = Registration::where('status', AppHelper::ACTIVE)
+                ->where('class_id', $classId)
+                ->where('academic_year_id', $acYearId)
+                ->where('roll_no', $request->get('roll_no'))
+                ->count();
 
-        if($duplicateRollNo){
-            return redirect()->route('student.create')
-                ->with("error", 'Roll no already exists!')
-                ->withInput($request->except(['roll_no','password']));
+            if($duplicateRollNo){
+                return redirect()->route('student.create')
+                    ->with("error", 'Roll no already exists!')
+                    ->withInput($request->except(['roll_no','password']));
+            }
         }
 
 
@@ -569,7 +576,7 @@ class StudentController extends Controller
         $gender = $student->getOriginal('gender');
         $religion = $student->getOriginal('religion');
         $bloodGroup = $student->getOriginal('blood_group');
-        $nationality = ($student->nationality != "Bangladeshi") ? "Other" : "";
+        $nationality = $student->nationality;
         $shift = $regiInfo->shift;
         $section = $regiInfo->section_id;
         $iclass = $regiInfo->class_id;
@@ -682,11 +689,11 @@ class StudentController extends Controller
             'card_no' => 'nullable|min:4|max:50',
             'email' => 'nullable|email|max:255|unique:students,email,'.$student->id.'|email|unique:users,email,'.$student->user_id,
 //            'class_id' => 'required|integer',
-            'section_id' => 'required|integer',
+            'section_id' => 'nullable|integer',
             'shift' => 'nullable|max:15',
             'roll_no' => 'nullable|integer',
             'board_regi_no' => 'nullable|max:50',
-            'core_subjects' => 'required|array',
+            'core_subjects' => 'nullable|array',
             'selective_subjects' => 'nullable|array',
             'fourth_subject' => 'nullable|integer',
             'user_id' => 'nullable|integer',
@@ -721,16 +728,18 @@ class StudentController extends Controller
             }
         }
 
-        $duplicateRollNo = Registration::where('status', AppHelper::ACTIVE)
-            ->where('class_id', $regiInfo->class_id)
-            ->where('academic_year_id', $regiInfo->academic_year_id)
-            ->where('id', '!=', $regiInfo->id)
-            ->where('roll_no', $request->get('roll_no', 0))
-            ->count();
+        if ($request->filled('roll_no')) {
+            $duplicateRollNo = Registration::where('status', AppHelper::ACTIVE)
+                ->where('class_id', $regiInfo->class_id)
+                ->where('academic_year_id', $regiInfo->academic_year_id)
+                ->where('id', '!=', $regiInfo->id)
+                ->where('roll_no', $request->get('roll_no'))
+                ->count();
 
-        if($duplicateRollNo){
-            return redirect()->back()
-                ->with("error", 'Roll no already exists!');
+            if($duplicateRollNo){
+                return redirect()->back()
+                    ->with("error", 'Roll no already exists!');
+            }
         }
 
         //for max subject validation

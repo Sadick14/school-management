@@ -54,7 +54,7 @@
                         </div>
                         <div class="box-tools pull-right">
                             @can('student_attendance.create')
-                                <a class="btn btn-info btn-sm" href="{{ URL::route('student_attendance.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
+                                <a class="btn btn-add-new btn-sm" href="{{ URL::route('student_attendance.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
                             @endcan
                         </div>
                     </div>

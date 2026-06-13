@@ -31,68 +31,85 @@
 @section('pageContent')
     <!-- Main content -->
     <section class="content">
+        <!-- Modern Hero Banner -->
+        <div class="dashboard-hero-banner">
+            <div class="dashboard-hero-content">
+                <h2>Good Morning, {{ auth()->user()->name }}!</h2>
+                <p>Welcome back to your dashboard. You can manage student records, monitor attendance, configure schedules, and review academic reports from one place.</p>
+                <a href="{{ URL::route('student.index') }}" class="dashboard-hero-btn">View Students</a>
+            </div>
+            <!-- Beautiful modern inline SVG illustration -->
+            <svg class="dashboard-hero-illustration hidden-xs" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Graduate / Teacher visual representation -->
+                <circle cx="150" cy="100" r="80" fill="white" fill-opacity="0.1"/>
+                <circle cx="150" cy="100" r="50" fill="white" fill-opacity="0.15"/>
+                <!-- Graduate Cap -->
+                <path d="M150 50L210 70L150 90L90 70L150 50Z" fill="#ffffff" fill-opacity="0.9"/>
+                <path d="M110 77V105C110 115 128 123 150 123C172 123 190 115 190 105V77" fill="#ffffff" fill-opacity="0.8"/>
+                <rect x="203" y="73" width="6" height="40" rx="2" fill="#ffffff" fill-opacity="0.75"/>
+                <circle cx="206" cy="115" r="5" fill="#facc15"/>
+                <!-- Decorative stars/shapes -->
+                <path d="M70 40L73 47L80 48L75 53L76 60L70 56L64 60L65 53L60 48L67 47L70 40Z" fill="#facc15" fill-opacity="0.8"/>
+                <path d="M230 140L232 145L237 146L233 150L234 155L230 152L226 155L227 150L223 146L228 145L230 140Z" fill="#ffffff" fill-opacity="0.8"/>
+            </svg>
+        </div>
+
         @if($userRoleId == AppHelper::USER_ADMIN)
             <div class="row">
-                <div class="col-lg-3 col-xs-6">
-                    <div class="small-box ">
-                        <a class="small-box-footer bg-orange-dark" href="{{URL::route('student.index')}}">
-                            <div class="icon bg-orange-dark" style="padding: 9.5px 18px 8px 18px;">
+                <div class="col-lg-3 col-sm-6 col-xs-12">
+                    <a href="{{URL::route('student.index')}}" class="modern-stat-card-link">
+                        <div class="modern-stat-card stat-color-orange">
+                            <div class="stat-icon-wrapper">
                                 <i class="fa icon-student"></i>
                             </div>
-                            <div class="inner ">
-                                <h3 class="text-white">{{$students}} </h3>
-                                <p class="text-white">
-                                    Student </p>
+                            <div class="stat-content">
+                                <h3 class="stat-number">{{$students}}</h3>
+                                <p class="stat-label">Students</p>
                             </div>
-                        </a>
-                    </div>
+                        </div>
+                    </a>
                 </div>
 
-                <div class="col-lg-3 col-xs-6">
-                    <div class="small-box ">
-                        <a class="small-box-footer bg-pink-light" href="{{URL::route('teacher.index')}}">
-                            <div class="icon bg-pink-light" style="padding: 9.5px 18px 8px 18px;">
+                <div class="col-lg-3 col-sm-6 col-xs-12">
+                    <a href="{{URL::route('teacher.index')}}" class="modern-stat-card-link">
+                        <div class="modern-stat-card stat-color-pink">
+                            <div class="stat-icon-wrapper">
                                 <i class="fa icon-teacher"></i>
                             </div>
-                            <div class="inner ">
-                                <h3 class="text-white">
-                                    {{$teachers}} </h3>
-                                <p class="text-white">
-                                    Teacher </p>
+                            <div class="stat-content">
+                                <h3 class="stat-number">{{$teachers}}</h3>
+                                <p class="stat-label">Teachers</p>
                             </div>
-                        </a>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-xs-6">
-                    <div class="small-box ">
-                        <a class="small-box-footer bg-purple-light" href="{{URL::route('hrm.employee.index')}}">
-                            <div class="icon bg-purple-light" style="padding: 9.5px 18px 8px 18px;">
-                                <i class="fa icon-member"></i>
-                            </div>
-                            <div class="inner ">
-                                <h3 class="text-white">
-                                    {{$employee}} </h3>
-                                <p class="text-white">
-                                    Employee </p>
-                            </div>
-                        </a>
-                    </div>
+                        </div>
+                    </a>
                 </div>
 
-                <div class="col-lg-3 col-xs-6">
-                    <div class="small-box ">
-                        <a class="small-box-footer bg-teal-light" href="{{URL::route('academic.subject')}}">
-                            <div class="icon bg-teal-light" style="padding: 9.5px 18px 8px 18px;">
+                <div class="col-lg-3 col-sm-6 col-xs-12">
+                    <a href="{{URL::route('hrm.employee.index')}}" class="modern-stat-card-link">
+                        <div class="modern-stat-card stat-color-purple">
+                            <div class="stat-icon-wrapper">
+                                <i class="fa icon-member"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number">{{$employee}}</h3>
+                                <p class="stat-label">Employees</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-sm-6 col-xs-12">
+                    <a href="{{URL::route('academic.subject')}}" class="modern-stat-card-link">
+                        <div class="modern-stat-card stat-color-teal">
+                            <div class="stat-icon-wrapper">
                                 <i class="fa icon-subject"></i>
                             </div>
-                            <div class="inner ">
-                                <h3 class="text-white">
-                                    {{$subjects}} </h3>
-                                <p class="text-white">
-                                    Subject </p>
+                            <div class="stat-content">
+                                <h3 class="stat-number">{{$subjects}}</h3>
+                                <p class="stat-label">Subjects</p>
                             </div>
-                        </a>
-                    </div>
+                        </div>
+                    </a>
                 </div>
             </div>
         @endif

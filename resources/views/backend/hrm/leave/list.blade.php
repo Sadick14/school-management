@@ -31,7 +31,7 @@
                     <div class="box-header border">
                         <h3 class="text-info" style="margin-left: 10px;">Filters</h3>
                         <div class="box-tools pull-right">
-                            <a class="btn btn-info btn-sm" href="{{ URL::route('hrm.leave.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
+                            <a class="btn btn-add-new btn-sm" href="{{ URL::route('hrm.leave.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
                         </div>
                     </div>
                     <!-- /.box-header -->

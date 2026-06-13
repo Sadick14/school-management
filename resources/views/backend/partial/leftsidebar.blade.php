@@ -2,6 +2,22 @@
 <!-- Left side column. contains the sidebar -->
 <aside class="main-sidebar">
     <section class="sidebar">
+        <div class="sidebar-logo-container hidden-xs" style="display: none;">
+            <div class="logo-circle">
+                @if(isset($appSettings['institute_settings']['short_name']))
+                    {{ substr($appSettings['institute_settings']['short_name'], 0, 1) }}
+                @else
+                    E
+                @endif
+            </div>
+            <span class="logo-text">
+                @if(isset($appSettings['institute_settings']['short_name']))
+                    {{$appSettings['institute_settings']['short_name']}}
+                @else
+                    EduSuite
+                @endif
+            </span>
+        </div>
         <!-- sidebar menu -->
         <ul class="sidebar-menu" data-widget="tree">
             <li>
@@ -467,4 +483,5 @@
         </ul>
     </section>
     <!-- /.sidebar -->
+    
 </aside>

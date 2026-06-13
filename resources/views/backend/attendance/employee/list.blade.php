@@ -42,7 +42,7 @@
                         </div>
                         <div class="box-tools pull-right">
                             @can('employee_attendance.create')
-                                <a class="btn btn-info btn-sm" href="{{ URL::route('employee_attendance.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
+                                <a class="btn btn-add-new btn-sm" href="{{ URL::route('employee_attendance.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
                             @endcan
                         </div>
                     </div>

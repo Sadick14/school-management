@@ -71,7 +71,7 @@
 
                             </div>
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="form-group has-feedback">
                                         <label for="duration">Course duration(In Year)<span class="text-danger">*</span></label>
                                         <input  type="number" class="form-control" name="duration" placeholder="1,2,3,4" value="@if($iclass){{ $iclass->duration }}@else{{ old('duration', 1) }}@endif" required>
@@ -79,7 +79,7 @@
                                         <span class="text-danger">{{ $errors->first('duration') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="form-group has-feedback">
                                         <label for="have_selective_subject">Have Selective Subject?
                                             <div class="checkbox icheck">
@@ -89,7 +89,7 @@
                                         <span class="text-danger">{{ $errors->first('have_selective_subject') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-3" id="max_selective" @if(!$have_selective_subject) style="display: none;" @endif>
+                                <div class="col-md-4" id="max_selective" @if(!$have_selective_subject) style="display: none;" @endif>
                                     <div class="form-group has-feedback">
                                         <label for="max_selective_subject">Max Selective Subject<span class="text-danger">*</span></label>
                                         <input  type="number" class="form-control" name="max_selective_subject" placeholder="1,2,3,4" value="@if($iclass){{ $iclass->max_selective_subject }}@else{{ old('max_selective_subject') }}@endif" required>
@@ -97,16 +97,13 @@
                                         <span class="text-danger">{{ $errors->first('max_selective_subject') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
                                     <div class="form-group has-feedback">
-                                        <label for="have_elective_subject">Have Elective Subject?
-                                            <div class="checkbox icheck">
-                                                <label>
-                                                    {!! Form::checkbox('have_elective_subject', $have_elective_subject, $have_elective_subject) !!}
-                                                </label>
-                                            </div>
-                                        </label>
-                                        <span class="text-danger">{{ $errors->first('have_elective_subject') }}</span>
+                                        <label for="subjects">Subjects</label>
+                                        {!! Form::select('subjects[]', $allSubjects, $selectedSubjects, ['multiple' => 'true', 'data-placeholder' => 'select subjects for this class', 'class' => 'form-control select2']) !!}
+                                        <span class="text-danger">{{ $errors->first('subjects') }}</span>
                                     </div>
                                 </div>
                             </div>

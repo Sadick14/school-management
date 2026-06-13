@@ -46,4 +46,9 @@ class IClass extends Model
     {
         return $this->hasMany('App\StudentAttendance', 'class_id');
     }
+
+    public function subjects()
+    {
+        return $this->hasMany('App\Subject', 'class_id');
+    }
 }

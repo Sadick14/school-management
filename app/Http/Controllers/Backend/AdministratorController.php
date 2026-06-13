@@ -394,10 +394,13 @@ class AdministratorController extends Controller
 
         }
 
-        $users = User::select(DB::raw("CONCAT(name,'[',username,']') AS name"),'id')
+        $users = User::select('id', 'name', 'username')
             ->where('is_super_admin', false)
             ->where('status', '1')
-            ->pluck('name','id');
+            ->get()
+            ->mapWithKeys(function ($user) {
+                return [$user->id => "{$user->name}[{$user->username}]"];
+            });
 
         return view('backend.administrator.user.change_password', compact('users'));
     }

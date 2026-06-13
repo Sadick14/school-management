@@ -63,17 +63,7 @@
 
                             </div>
                             <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group has-feedback">
-                                        <label for="class_id">Class Name<span class="text-danger">*</span>
-                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Set class that belongs to this subject"></i>
-                                        </label>
-                                        {!! Form::select('class_id', $classes, $iclass , ['placeholder' => 'select a class...','class' => 'form-control select2', 'required' => 'true']) !!}
-                                        <span class="form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('class_id') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group has-feedback">
                                         <label for="teacher_id">Teacher Name<span class="text-danger">*</span>
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Set subject teacher"></i>
@@ -83,7 +73,7 @@
                                         <span class="text-danger">{{ $errors->first('teacher_id') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <div class="form-group has-feedback">
                                         <label for="order">Order sequence<span class="text-danger">*</span>
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Position/sorting/ordering number"></i>
@@ -93,7 +83,7 @@
                                         <span class="text-danger">{{ $errors->first('order') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <div class="form-group has-feedback">
                                         <label for="open_for_marks_entry">Exclude in Result
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check it, if this subject is not add in result calculation."></i>

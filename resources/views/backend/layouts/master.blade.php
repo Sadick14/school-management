@@ -17,13 +17,6 @@
     <script src="{{ asset(mix('/js/pace.js')) }}"></script>
     <link href="{{ asset(mix('/css/pace.css')) }}" rel="stylesheet" type="text/css">
 
-    <!-- jQuery and Bootstrap from CDN -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.12/css/select2.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.12/js/select2.min.js"></script>
-
     <!-- vendor libraries CSS -->
     <link href="{{ asset(mix('/css/vendor.css')) }}" rel="stylesheet" type="text/css">
     <!-- theme CSS -->
@@ -43,19 +36,6 @@
     <script>
         var hash = '{{session('user_session_sha1')}}';
         var institute_category = '{{$institute_category}}';
-
-        // Completely disable CRV error modal
-        window.crv = {
-            showModal: function() { return false; },
-            errorModal: function() { return false; },
-            notify: function() { return false; },
-            error: function() { return false; }
-        };
-
-        // Override any error handlers that might show modals
-        if (window.crv && window.crv.CrvClass) {
-            window.crv.CrvClass.prototype.showModal = function() { return false; };
-        }
     </script>
    <!-- Child Page css goes here  -->
 @yield("extraStyle")
@@ -130,10 +110,6 @@
 <!-- Extra js from child page -->
 @yield("extraScript")
 <!-- END JAVASCRIPT -->
-<script>
-    // Debug mode - show all errors
-    console.log('Debug mode enabled - errors will be visible');
-</script>
 </body>
 
 </html>

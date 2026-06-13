@@ -49,7 +49,7 @@ class AcademicController extends Controller
         }
 
         //for get request
-        $iclasses = IClass::orderBy('order', 'asc')->get();
+        $iclasses = IClass::with('subjects')->orderBy('order', 'asc')->get();
 
         return view('backend.academic.iclass.list', compact('iclasses'));
     }
@@ -69,7 +69,9 @@ class AcademicController extends Controller
                 'group' => 'nullable|max:20',
                 'note' => 'max:500',
                 'duration' => 'integer',
-                'max_selective_subject' => 'nullable|integer'
+                'max_selective_subject' => 'nullable|integer',
+                'subjects' => 'nullable|array',
+                'subjects.*' => 'integer|exists:subjects,id',
             ]);
 
             $data = $request->all();
@@ -86,12 +88,6 @@ class AcademicController extends Controller
             else{
                 $data['have_selective_subject'] = false;
             }
-            if($request->has('have_elective_subject')){
-                $data['have_elective_subject'] = true;
-            }
-            else{
-                $data['have_elective_subject'] = false;
-            }
             if($request->has('is_open_for_admission')){
                 $data['is_open_for_admission'] = 1;
             }
@@ -99,10 +95,18 @@ class AcademicController extends Controller
                 $data['is_open_for_admission'] = 0;
             }
 
-            IClass::updateOrCreate(
+            $subjectIds = $data['subjects'] ?? [];
+            unset($data['subjects']);
+
+            $iclass = IClass::updateOrCreate(
                 ['id' => $id],
                 $data
             );
+
+            //assign selected subjects to this class
+            if(!empty($subjectIds)){
+                Subject::whereIn('id', $subjectIds)->update(['class_id' => $iclass->id]);
+            }
 
             if(!$id){
                 //now notify the admins about this record
@@ -125,21 +129,31 @@ class AcademicController extends Controller
         $iclass = IClass::find($id);
         $group = 'None';
         $have_selective_subject = 0;
-        $have_elective_subject = 0;
         $is_open_for_admission = 0;
+        $selectedSubjects = [];
 
         if($iclass){
             $group = $iclass->group;
             $have_selective_subject = $iclass->have_selective_subject;
-            $have_elective_subject = $iclass->have_elective_subject;
             $is_open_for_admission = $iclass->is_open_for_admission;
-
+            $selectedSubjects = $iclass->subjects->pluck('id')->toArray();
         }
 
+        $allSubjects = Subject::with('class')->orderBy('name', 'asc')->get()
+            ->mapWithKeys(function ($subject) use ($id) {
+                $label = $subject->name.' ('.$subject->code.')';
+                if($subject->class_id && $subject->class_id != $id && $subject->class){
+                    $label .= ' - '.$subject->class->name;
+                }
+
+                return [$subject->id => $label];
+            });
+
         return view('backend.academic.iclass.add', compact('iclass','group',
-            'have_elective_subject',
             'have_selective_subject',
-            'is_open_for_admission'
+            'is_open_for_admission',
+            'allSubjects',
+            'selectedSubjects'
         ));
     }
 
@@ -395,7 +409,6 @@ class AcademicController extends Controller
                 'name' => 'required|min:1|max:255',
                 'code' => 'required|min:1|max:255',
                 'type' => 'required|numeric',
-                'class_id' => 'required|integer',
                 'teacher_id' => 'required|array',
                 'order' => 'required|integer',
             ]);
@@ -409,6 +422,11 @@ class AcademicController extends Controller
                 }
                 else{
                     $data['exclude_in_result'] = false;
+                }
+
+                //a class is required (FK), assign new subjects to the first class until assigned via the class form
+                if(!$id){
+                    $data['class_id'] = IClass::orderBy('order', 'asc')->value('id');
                 }
 
                 $subject = Subject::updateOrCreate(
@@ -449,20 +467,15 @@ class AcademicController extends Controller
             ->pluck('name', 'id');
         $teacher_ids = [];
 
-        $classes = IClass::where('status', AppHelper::ACTIVE)
-            ->orderBy('order','asc')
-            ->pluck('name', 'id');
-        $iclass = null;
         $subjectType = null;
         $exclude_in_result = 0;
 
         if($subject){
             $teacher_ids = $subject->teachers->pluck('id')->toArray();
-            $iclass = $subject->class_id;
             $subjectType = $subject->getOriginal('type');
             $exclude_in_result = $subject->exclude_in_result;
         }
-        return view('backend.academic.subject.add', compact('subject', 'iclass', 'classes',
+        return view('backend.academic.subject.add', compact('subject',
             'teachers', 'teacher_ids', 'subjectType', 'exclude_in_result'));
 
     }

@@ -69,7 +69,7 @@
                                         <label for="gender">Gender<span class="text-danger">*</span>
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="select gender type"></i>
                                         </label>
-                                        @php $param = ['class' => 'form-control select2', 'placeholder' => 'select an option', 'required' => 'true']; if($gender) { $param['readonly'] = 'true'; } @endphp
+                                        @php $param = ['class' => 'form-control select2', 'placeholder' => 'select an option', 'required' => 'true']; @endphp
                                         {!! Form::select('gender', AppHelper::GENDER, $gender , $param) !!}
                                         <span class="form-control-feedback"></span>
                                         <span class="text-danger">{{ $errors->first('gender') }}</span>
@@ -98,22 +98,14 @@
                                         <span class="text-danger">{{ $errors->first('blood_group') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <div class="form-group has-feedback">
                                         <label for="nationality">Nationality<span class="text-danger">*</span>
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="select nationality"></i>
                                         </label>
-                                        {!! Form::select('nationality', ['Bangladeshi' => 'Bangladeshi', 'Other' => 'Other'], $nationality , ['class' => 'form-control', 'required' => 'true']) !!}
+                                        {!! Form::select('nationality', AppHelper::COUNTRIES, $nationality , ['class' => 'form-control select2', 'required' => 'true']) !!}
                                         <span class="form-control-feedback"></span>
                                         <span class="text-danger">{{ $errors->first('nationality') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group has-feedback">
-                                        <label for="nationality">Nationality</label>
-                                        <input  type="text" class="form-control" name="nationality_other" @if(!$student || $student->nationality == "Bangladeshi") readonly @endif placeholder="Nationality" value="@if($student && $student->nationality != "Bangladeshi"){{$student->nationality}}@else{{old('nationality')}}@endif" maxlength="50" >
-                                        <span class="fa fa-map-marker form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('nationality_other') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -285,25 +277,14 @@
 
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-5">
                                     <div class="form-group has-feedback">
                                         <label for="section_id">Section
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Set section that student belongs to"></i>
-                                            <span class="text-danger">*</span>
                                         </label>
-                                        {!! Form::select('section_id', $sections, $section , ['placeholder' => 'Pick a section...', 'id' => 'checkStudentCapacity', 'class' => 'form-control select2', 'required' => 'true']) !!}
+                                        {!! Form::select('section_id', $sections, $section , ['placeholder' => 'Pick a section...', 'id' => 'checkStudentCapacity', 'class' => 'form-control select2']) !!}
                                         <span class="form-control-feedback"></span>
                                         <span class="text-danger">{{ $errors->first('section_id') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group has-feedback">
-                                        <label for="shift">Shift
-                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Set class shift"></i>
-                                        </label>
-                                        {!! Form::select('shift', ['Morning' => 'Morning', 'Day' => 'Day', 'Evening' => 'Evening' ], $shift , ['placeholder' => 'Pick a shift...','class' => 'form-control select2', 'required' => 'true']) !!}
-                                        <span class="form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('shift') }}</span>
                                     </div>
                                 </div>
 
@@ -318,14 +299,7 @@
                                         <span class="text-danger">{{ $errors->first('card_no') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <div class="form-group has-feedback">
-                                        <label for="roll_no">Roll No.</label>
-                                        <input  type="number" class="form-control" name="roll_no"  placeholder="roll number" value="@if($regiInfo){{$regiInfo->roll_no}}@else{{old('roll_no')}}@endif"  maxlength="20">
-                                        <span class="fa fa-sort-numeric-asc form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('roll_no') }}</span>
-                                    </div>
-                                </div>
+
                                 <div class="col-md-2">
                                     <div class="form-group has-feedback">
                                         <label for="board_regi_no">Board Registration No.</label>
@@ -374,40 +348,14 @@
 
                             <p class="lead section-title">Subject Info:</p>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-12">
                                     <div class="form-group has-feedback">
-                                        <label for="core_subjects">Core Subjects <span class="text-danger">*</span>
+                                        <label for="core_subjects">Core Subjects
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Class core/mandatory subjects"></i>
                                         </label>
-                                        {!! Form::select('core_subjects[]', $coreSubjects, $csubjects , ['multiple' => 'true', 'readonly' => 'true', 'class' => 'form-control select2', 'required' => 'true']) !!}
+                                        {!! Form::select('core_subjects[]', $coreSubjects, $csubjects , ['multiple' => 'true', 'readonly' => 'true', 'class' => 'form-control select2']) !!}
                                         <span class="fa form-control-feedback"></span>
                                         <span class="text-danger">{{ $errors->first('core_subjects') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4" id="divSelective" @if($classInfo && !$classInfo->have_selective_subject) style="display: none;" @endif>
-                                    <div class="form-group has-feedback">
-                                        <label for="selective_subjects">Selective Subjects
-                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Class selective subjects. like religious subjects."></i>
-                                        </label>
-                                        @php
-                                            $params = ['multiple' => 'true', 'class' => 'form-control select2', 'placeholder' => 'select subjects', 'data-placeholder' => 'select subjects'];
-                                            if($classInfo && $classInfo->have_selective_subject){
-                                                $params['data-max'] = $classInfo->max_selective_subject;
-                                            }
-                                        @endphp
-                                        {!! Form::select('selective_subjects[]', $selectiveSubjects, $ssubjects , $params) !!}
-                                        <span class="fa form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('selective_subjects') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4" id="divElective" @if($classInfo && !$classInfo->have_elective_subject) style="display: none;" @endif>
-                                    <div class="form-group has-feedback">
-                                        <label for="fourth_subject">4<sup>th</sup>/Elective Subject
-                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Select a subject if student have 4th subject. like class 9,10,11,12 have that."></i>
-                                        </label>
-                                        {!! Form::select('fourth_subject', $electiveSubjects, $esubject , ['data-placeholder' => 'select a subject', 'data-allow-clear' => 'true', 'placeholder' => 'select a subject', 'class' => 'form-control select2']) !!}
-                                        <span class="fa form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('fourth_subject') }}</span>
                                     </div>
                                 </div>
                             </div>
