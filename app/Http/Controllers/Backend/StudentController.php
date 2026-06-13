@@ -53,41 +53,54 @@ class StudentController extends Controller
 
         $classInfo = null;
         $sectionInfo = null;
-        if($class_id){
 
-            if(AppHelper::getInstituteCategory() != 'college') {
-                // now check is academic year set or not
-                $settings = AppHelper::getAppSettings();
-                if(!isset($settings['academic_year']) || (int)($settings['academic_year']) < 1){
-                    return redirect()->route('student.index')
-                        ->with("error",'Academic year not set yet! Please go to settings and set it.')
-                        ->withInput();
-                }
-                $acYear = $settings['academic_year'];
+        // Set academic year
+        if(AppHelper::getInstituteCategory() != 'college') {
+            // For non-college, get from settings
+            $settings = AppHelper::getAppSettings();
+            if(!isset($settings['academic_year']) || (int)($settings['academic_year']) < 1){
+                return redirect()->route('student.index')
+                    ->with("error",'Academic year not set yet! Please go to settings and set it.')
+                    ->withInput();
             }
+            $acYear = $settings['academic_year'];
+        } else {
+            // For college, use provided academic_year or default to latest
+            if(!$acYear) {
+                $latestYear = AcademicYear::where('status', '1')->orderBy('id', 'desc')->first();
+                if($latestYear) {
+                    $acYear = $latestYear->id;
+                } else {
+                    $acYear = 0;
+                }
+            }
+        }
 
+        // Build query for students
+        $query = Registration::where('status', $status)->with('student');
 
-            //get student
-            $students = Registration::where('class_id', $class_id)
-                ->where('academic_year_id', $acYear)
-                ->where('status', $status)
-                ->section($section_id)
-                ->with('student')
-                ->orderBy('student_id','asc')
-                ->get();
+        if($acYear) {
+            $query->where('academic_year_id', $acYear);
+        }
 
-            //if section is mention then full this class section list
-            if($section_id){
-                $sections = Section::where('status', AppHelper::ACTIVE)
-                    ->where('class_id', $class_id)
-                    ->orderBy('name','asc')
-                    ->pluck('name', 'id');
+        if($class_id){
+            $query->where('class_id', $class_id);
 
+            // Load sections for the selected class
+            $sections = Section::where('status', AppHelper::ACTIVE)
+                ->where('class_id', $class_id)
+                ->orderBy('name','asc')
+                ->pluck('name', 'id');
+
+            // Apply section filter if provided
+            if($section_id) {
+                $query->where('section_id', $section_id);
             }
 
             $iclass = $class_id;
-
         }
+
+        $students = $query->orderBy('student_id','asc')->get();
 
         return view('backend.student.list', compact('students', 'classes', 'iclass', 'sections',
             'section_id', 'academic_years', 'acYear', 'status'

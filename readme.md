@@ -1,4 +1,4 @@
-## CloudSchool
+## DevSuite Edu
 
 [![Codeship Status for hrshadhin/school-management-system](https://app.codeship.com/projects/09010350-b97f-0136-1477-5a7589b245e6/status?branch=master)](https://app.codeship.com/projects/312233)
 [![license](https://img.shields.io/badge/license-AGPL-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
@@ -41,9 +41,9 @@ Another School Management System build with Laravel and PHP 7
 
 [:arrow_up: Back to top](#index)
 
-:mega: Join our discord channel: [CloudSchool](https://discord.gg/7rXyuu8):mega:
+:mega: Join our discord channel: [DevSuite Edu](https://discord.gg/7rXyuu8):mega:
 
-:mega: Send us an email: [info@cloudschoolbd.com](mailto:info@cloudschoolbd.com):mega:
+:mega: Send us an email: [info@devsuiteedu.com](mailto:info@devsuiteedu.com):mega:
 
 ## Demo
 
@@ -51,8 +51,8 @@ Another School Management System build with Laravel and PHP 7
 
 #### Enterprise Edition
 
-- Website: [http://demo.cloudschoolbd.com](http://demo.cloudschoolbd.com)
-- App login: [http://demo.cloudschoolbd.com/login](http://demo.cloudschoolbd.com/login)
+- Website: [http://demo.devsuiteedu.com](http://demo.devsuiteedu.com)
+- App login: [http://demo.devsuiteedu.com/login](http://demo.devsuiteedu.com/login)
 
   | Username   | Password |
   | ---------- | :------- |
@@ -143,12 +143,12 @@ Another School Management System build with Laravel and PHP 7
   ```
 
   ```
-  $ git clone https://github.com/hrshadhin/school-management-system.git cloudschool
+  $ git clone https://github.com/hrshadhin/school-management-system.git devsuiteedu
   ```
 
 - change directory
   ```
-  $ cd cloudschool
+  $ cd devsuiteedu
   ```
 - Copy sample `env` file and change configuration according to your need in ".env" file and create Database
   ```
@@ -167,10 +167,10 @@ Another School Management System build with Laravel and PHP 7
   - Method 1: By one command
 
     ```
-    # setup cloudschool with out demo data
+    # setup DevSuite Edu with out demo data
     $ php artisan fresh-install
 
-    # setup cloudschool with demo data
+    # setup DevSuite Edu with demo data
     $ php artisan fresh-install --with-data
      # OR
     $ php artisan fresh-install -d
@@ -224,7 +224,7 @@ Another School Management System build with Laravel and PHP 7
 
 [:arrow_up: Back to top](#index)
 
-- [http://ug.cloudschoolbd.com](http://ug.cloudschoolbd.com)
+- [http://ug.devsuiteedu.com](http://ug.devsuiteedu.com)
 
 ## Timeline
 
@@ -266,7 +266,7 @@ A big shout out to all the contributers, more specifically to these guys
 
 - If you faced any problems, first check previous issue list. If doesn't exists then create a new one.
 - You can report the bugs at the [issue tracker](https://github.com/hrshadhin/school-management-system/issues)
-- If you discover a security vulnerability within CloudSchool app, please send an e-mail to [sos@cloudschoolbd.com](mailto:sos@cloudschoolbd.com). All security vulnerabilities will be promptly addressed.
+- If you discover a security vulnerability within DevSuite Edu app, please send an e-mail to [contact@devsuiteedu.com](mailto:contact@devsuiteedu.com). All security vulnerabilities will be promptly addressed.
 
 ## License
 

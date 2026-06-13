@@ -95,10 +95,12 @@ class DemoAppDataSeeder extends Seeder
 
 
     private function deletePreviousData(){
-        /***
-         * This code is MYSQL specific
-         */
-        \Illuminate\Support\Facades\DB::statement("SET foreign_key_checks=0");
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("PRAGMA foreign_keys=OFF");
+        } else {
+            DB::statement("SET foreign_key_checks=0");
+        }
+
         $this->deleteUserData();
         AcademicYear::truncate();
         AppMeta::truncate();
@@ -120,7 +122,12 @@ class DemoAppDataSeeder extends Seeder
         \Illuminate\Support\Facades\DB::table('result_combines')->truncate();
         \Illuminate\Support\Facades\DB::table('teacher_subjects')->truncate();
         \Illuminate\Support\Facades\DB::table('student_subjects')->truncate();
-        \Illuminate\Support\Facades\DB::statement("SET foreign_key_checks=1");
+
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("PRAGMA foreign_keys=ON");
+        } else {
+            DB::statement("SET foreign_key_checks=1");
+        }
 
         //delete images
         $storagePath = storage_path('app/public');
@@ -145,7 +152,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function userData(){
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $users = factory(App\User::class, 3)
             ->create(['created_by' => $created_by,'created_at' => $created_at]);
@@ -199,16 +206,16 @@ class DemoAppDataSeeder extends Seeder
         $data['favicon'] = $fileName;
 
 
-        $data['name'] = 'CloudSchool BD';
-        $data['short_name'] = 'CSBD';
+        $data['name'] = 'DevSuite Edu';
+        $data['short_name'] = 'DSE';
         $data['establish'] = '2010';
-        $data['website_link'] = 'http://cloudschoolbd.com';
-        $data['email'] = 'info@cloudschoolbd.com';
-        $data['phone_no'] = '+8801xxxxxxxxx';
-        $data['address'] = 'Dhanmondi, Dhaka-1207';
+        $data['website_link'] = 'http://devsuiteedu.com';
+        $data['email'] = 'info@devsuiteedu.com';
+        $data['phone_no'] = '+233302123456';
+        $data['address'] = 'Accra, Ghana';
 
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         //now create
         AppMeta::create([
@@ -228,7 +235,7 @@ class DemoAppDataSeeder extends Seeder
         }
 
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
         $shiftData = [
             'Morning' => [
                 'start' => '08:00 am',
@@ -256,7 +263,7 @@ class DemoAppDataSeeder extends Seeder
             ['meta_key' => 'total_sick_leave', 'meta_value' => 10, 'created_by' => $created_by, 'created_at' => $created_at],
             ['meta_key' => 'total_maternity_leave', 'meta_value' => 90, 'created_by' => $created_by, 'created_at' => $created_at],
             ['meta_key' => 'total_special_leave', 'meta_value' => 5, 'created_by' => $created_by, 'created_at' => $created_at],
-            ['meta_key' => 'board_name', 'meta_value' => 'Dhaka', 'created_by' => $created_by, 'created_at' => $created_at]
+            ['meta_key' => 'board_name', 'meta_value' => 'Ghana Education Service', 'created_by' => $created_by, 'created_at' => $created_at]
         ];
 
         //now crate
@@ -270,7 +277,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function classData(){
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $insertData = [
             [
@@ -412,7 +419,7 @@ class DemoAppDataSeeder extends Seeder
     private function teacherData() {
 
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $insHeadDesignation = 7;
         if(AppHelper::getInstituteCategory() == "college"){
@@ -450,7 +457,7 @@ class DemoAppDataSeeder extends Seeder
     private function employeeData() {
 
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $employee = factory(App\Employee::class, 1)->create(['role_id' => 5, 'created_by' => $created_by,'created_at' => $created_at])->first();
         \App\UserRole::create(['user_id' => $employee->user_id, 'role_id' => $employee->role_id, 'created_by' => $created_by, 'created_at' => $created_at]);
@@ -465,7 +472,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function sectionData() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $section = factory(App\Section::class, 5)
             ->create(['created_by' => $created_by,'created_at' => $created_at]);
@@ -492,7 +499,7 @@ class DemoAppDataSeeder extends Seeder
     private function subjectData()
     {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE', 'Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE', 'Africa/Accra'));
 
         $subject = factory(App\Subject::class, 10)
             ->create(['created_by' => $created_by, 'created_at' => $created_at]);
@@ -606,7 +613,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function studentData() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $students = factory(App\Student::class, 15)
             ->create(['created_by' => $created_by,'created_at' => $created_at]);
@@ -760,7 +767,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function studentAttendance() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $endDate = $created_at->copy();
         $startDate = $created_at->copy()->subDays(15);
@@ -833,7 +840,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function employeeAttendance() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $endDate = $created_at->copy();
         $startDate = $created_at->copy()->subDays(15);
@@ -905,7 +912,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function leave() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
         $leaves = factory(App\Leave::class, 5)
             ->create(['created_by' => $created_by,'created_at' => $created_at]);
 
@@ -913,7 +920,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function examData() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $exmas = factory(App\Exam::class, 10)
             ->create(['created_by' => $created_by,'created_at' => $created_at]);
@@ -953,7 +960,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function gradeData() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $grades = [
             [
@@ -1056,7 +1063,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function examRulesData() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $class_id = 1;
 
@@ -1192,7 +1199,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function examMarksData() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $class_id = 1;
         $academic_year_id = 1;
@@ -1277,7 +1284,7 @@ class DemoAppDataSeeder extends Seeder
 
     private function generateResult() {
         $created_by = 1;
-        $created_at = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $created_at = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         $class_id = 1;
         $acYear = 1;

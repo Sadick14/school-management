@@ -20,7 +20,7 @@ class UsersTableSeeder extends Seeder
             [
                 'name' => 'Super Admin',
                 'username' => 'superadmin',
-                'email' => 'superadmin@cloudschoolbd.com',
+                'email' => 'superadmin@devsuiteedu.com',
                 'password' => bcrypt('super99'),
                 'remember_token' => null,
                 'is_super_admin' => true
@@ -31,7 +31,7 @@ class UsersTableSeeder extends Seeder
             [
                 'name' => 'Mr. admin',
                 'username' => 'admin',
-                'email' => 'admin@cloudschoolbd.com',
+                'email' => 'admin@devsuiteedu.com',
                 'password' => bcrypt('demo123'),
                 'remember_token' => null,
             ]

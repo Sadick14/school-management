@@ -29,7 +29,7 @@ Artisan::command('fresh-install {--d|with-data : Seed demo data}', function () {
     //clear cache
     $this->call('cache:all-clear');
     $this->comment('Setup complete!');
-})->describe('Setup fresh copy of CloudSchool with or without demo data.');
+})->describe('Setup fresh copy of DevSuite Edu with or without demo data.');
 
 //clear all caches
 Artisan::command('cache:all-clear}', function () {

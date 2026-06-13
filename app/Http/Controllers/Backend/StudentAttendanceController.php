@@ -188,6 +188,15 @@ class StudentAttendanceController extends Controller
             ->orderBy('order', 'asc')
             ->pluck('name', 'id');
 
+        // Get sections for the selected class
+        $sections = [];
+        if ($class_id > 0) {
+            $sections = Section::where('status', AppHelper::ACTIVE)
+                ->where('class_id', $class_id)
+                ->orderBy('id', 'asc')
+                ->pluck('name', 'id');
+        }
+
         //if its college then have to get those academic years
         if (AppHelper::getInstituteCategory() == 'college') {
             $academic_years = AcademicYear::where('status', '1')->orderBy('id', 'desc')->pluck('title', 'id');
@@ -258,7 +267,7 @@ class StudentAttendanceController extends Controller
         $students = $request->get('registrationIds');
         $present = $request->get('present', []);
         $attendance_date = Carbon::createFromFormat('d/m/Y', $request->get('attendance_date'))->format('Y-m-d');
-        $dateTimeNow = Carbon::now(env('APP_TIMEZONE', 'Asia/Dhaka'));
+        $dateTimeNow = Carbon::now(env('APP_TIMEZONE', 'Africa/Accra'));
 
 
         //fetch institute shift running times

@@ -9,7 +9,7 @@ $factory->define(App\Leave::class, function (Faker $faker) {
             return App\Employee::inRandomOrder()->first()->id;
         },
         'leave_type' => rand(1,2),
-        'leave_date' => $faker->dateTimeThisMonth($max = 'now', $timezone = "Asia/Dhaka")->format('d/m/Y'),
+        'leave_date' => $faker->dateTimeThisMonth($max = 'now', $timezone = "Africa/Accra")->format('d/m/Y'),
         'document' => null,
         'description' => $faker->sentence,
         'status' => rand(1,3)

@@ -4,7 +4,7 @@
             <strong>Copyright &copy; {{date('Y')}} <i>{{$instituteName}}</i> All rights reserved.</strong>
         </div>
         <div class="col-xs-6 right">
-            <strong>CloudSchool v{{$majorVersion}}.{{$minorVersion}}.{{$patchVersion}}-{{$suffixVersion}} || Developed by <i>{{$maintainer}}</i></strong>
+            <strong>DevSuite Edu v{{$majorVersion}}.{{$minorVersion}}.{{$patchVersion}}-{{$suffixVersion}} || Developed by <i>{{$maintainer}}</i></strong>
         </div>
     </div>
 </div>

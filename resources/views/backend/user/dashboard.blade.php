@@ -131,7 +131,7 @@
             <div class="row">
                 <div class="col-md-3 col-md-offset-4">
                 <div class="callout callout-success text-center">
-                    <h3>Welcome to CloudSchool</h3>
+                    <h3>Welcome to DevSuite Edu</h3>
                     <p>Lot's of things are coming soon...</p>
                 </div>
                 </div>

@@ -8,7 +8,7 @@ $factory->define(App\Student::class, function (Faker $faker) {
     return [
         'user_id' => $user->id,
         'name' => $faker->name($gender = 'male'|'female'),
-        'dob' => $faker->dateTimeBetween($startDate = '-20 years', $endDate = 'now', $timezone = "Asia/Dhaka")->format('d/m/Y'),
+        'dob' => $faker->dateTimeBetween($startDate = '-20 years', $endDate = 'now', $timezone = "Africa/Accra")->format('d/m/Y'),
         'gender' => rand(1,2),
         'religion' => rand(1,5),
         'blood_group' => rand(1,8),

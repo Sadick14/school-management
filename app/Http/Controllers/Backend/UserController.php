@@ -192,7 +192,7 @@ class UserController extends Controller
             $reset = PasswordReset::where('email', $email)->first();
             if($reset) {
                 //token expiration checking, allow 24 hrs only
-                $today =  Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+                $today =  Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
                 $createdDate = Carbon::parse($reset->created_at);
                 $hoursGone = $today->diffInHours($createdDate);
                 if($this->hasher->check($token, $reset->token) && $hoursGone <= 24) {
@@ -359,7 +359,7 @@ class UserController extends Controller
     public function index()
     {
 
-         $users = User::rightJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
+         $users = User::leftJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->leftJoin('roles', 'user_roles.role_id', '=', 'roles.id')
             ->where('user_roles.role_id', '<>', AppHelper::USER_ADMIN)
             ->select('users.*','roles.name as role')
@@ -485,7 +485,7 @@ class UserController extends Controller
     public function edit($id)
     {
 
-        $user = User::rightJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
+        $user = User::leftJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->where('user_roles.role_id', '<>', AppHelper::USER_ADMIN)
             ->where('users.id', $id)
             ->select('users.*','user_roles.role_id')
@@ -513,7 +513,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $user = User::rightJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
+        $user = User::leftJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->where('user_roles.role_id', '<>', AppHelper::USER_ADMIN)
             ->where('users.id', $id)
             ->select('users.*','user_roles.role_id')
@@ -969,7 +969,7 @@ class UserController extends Controller
 
         $rolePermissions = [];
 
-        $now = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $now = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         if(!empty($permissionList) && count($permissionList)) {
 

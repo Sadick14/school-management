@@ -909,14 +909,16 @@ class PermissionTableSeeder extends Seeder
 
         echo PHP_EOL , 'seeding role permissions...', PHP_EOL;
         //now add admin role permissions
-        $admin = Role::where('name', 'admin')->first();
-        $permissions = Permission::where('group', '!=', 'Administration Exclusive')->get();
-        $admin->permissions()->saveMany($permissions);
+        $admin = Role::where('name', 'Admin')->first();
+        if ($admin) {
+            $permissions = Permission::where('group', '!=', 'Administration Exclusive')->get();
+            $admin->permissions()->saveMany($permissions);
+        }
 
         //now add other roles common permissions
         $permissions = Permission::where('group', 'Common')->get();
 
-        $roles = Role::where('name', '!=', 'admin')->get();
+        $roles = Role::where('name', '!=', 'Admin')->get();
         foreach ($roles as $role){
             echo 'seeding '.$role->name.' permissions...', PHP_EOL;
             $role->permissions()->saveMany($permissions);

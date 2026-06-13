@@ -4,10 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="@if(isset($appSettings['institute_settings']['name'])){{$appSettings['institute_settings']['name']}}@else CloudSchool @endif">
+    <meta name="description" content="@if(isset($appSettings['institute_settings']['name'])){{$appSettings['institute_settings']['name']}}@else DevSuite Edu @endif">
     <meta name="keywords" content="school,college,management,result,exam,attendance,account,hrm,library,payroll,hostel,admission,events">
-    <meta name="author" content="CloudSchool">
-    <title>@if(isset($appSettings['institute_settings']['short_name'])){{$appSettings['institute_settings']['short_name']}} @else CloudSchool @endif | @yield('pageTitle')</title>
+    <meta name="author" content="DevSuite Edu">
+    <title>@if(isset($appSettings['institute_settings']['short_name'])){{$appSettings['institute_settings']['short_name']}} @else DevSuite Edu @endif | @yield('pageTitle')</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -53,6 +53,15 @@
      <!-- Extra js from child page -->
      @yield("extraScript")
     <!-- END JAVASCRIPT -->
+    <script>
+        // Disable CRV error modal completely
+        window.crv = {
+            showModal: function() { return false; },
+            errorModal: function() { return false; },
+            notify: function() { return false; },
+            error: function() { return false; }
+        };
+    </script>
 </body>
 
 </html>

@@ -149,7 +149,7 @@ class EmployeeAttendanceController extends Controller
         });
 
 
-        $dateTimeNow = Carbon::now(env('APP_TIMEZONE', 'Asia/Dhaka'));
+        $dateTimeNow = Carbon::now(env('APP_TIMEZONE', 'Africa/Accra'));
         $attendances = [];
         $absentIds = [];
         $parseError = false;

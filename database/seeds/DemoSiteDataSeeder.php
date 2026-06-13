@@ -84,10 +84,12 @@ class DemoSiteDataSeeder extends Seeder
 
 
     private function deletePreviousData(){
-        /***
-         * This code is MYSQL specific
-         */
-        DB::statement("SET foreign_key_checks=0");
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("PRAGMA foreign_keys=OFF");
+        } else {
+            DB::statement("SET foreign_key_checks=0");
+        }
+
         SiteMeta::truncate();
         Testimonial::truncate();
         AboutContent::truncate();
@@ -96,7 +98,12 @@ class DemoSiteDataSeeder extends Seeder
         ClassProfile::truncate();
         TeacherProfile::truncate();
         Event::truncate();
-        DB::statement("SET foreign_key_checks=1");
+
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("PRAGMA foreign_keys=ON");
+        } else {
+            DB::statement("SET foreign_key_checks=1");
+        }
 
         //delete images
         $storagePath = storage_path('app/public');
@@ -137,8 +144,8 @@ class DemoSiteDataSeeder extends Seeder
         copy($originFilePath.$fileName, $destinationPath.$fileName);
         $data['favicon'] = $fileName;
 
-        $data['name'] = 'Cloud School';
-        $data['short_name'] = 'CloudSchool';
+        $data['name'] = 'DevSuite Edu';
+        $data['short_name'] = 'DevSuite Edu';
         $data['facebook'] = '#';
         $data['instagram'] = '#';
         $data['twitter'] = '#';
@@ -197,19 +204,19 @@ class DemoSiteDataSeeder extends Seeder
         //now crate or update model
         SiteMeta::updateOrCreate(
             ['meta_key' => 'contact_address'],
-            [ 'meta_value' => 'Dhaka-1207']
+            [ 'meta_value' => 'Accra, Ghana']
         );
         SiteMeta::updateOrCreate(
             ['meta_key' => 'contact_phone'],
-            [ 'meta_value' => '+880258685']
+            [ 'meta_value' => '+233302123456']
         );
         SiteMeta::updateOrCreate(
             ['meta_key' => 'contact_email'],
-            [ 'meta_value' => 'contact@cloudschoolbd.com']
+            [ 'meta_value' => 'contact@devsuiteedu.com']
         );
         SiteMeta::updateOrCreate(
             ['meta_key' => 'contact_latlong'],
-            [ 'meta_value' => '23.7340076,90.3841824']
+            [ 'meta_value' => '5.6037168,-0.1869644']
         );
     }
     private function galleryData()

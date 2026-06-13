@@ -33,24 +33,26 @@ class CreateIClassesTable extends Migration
 
         });
 
-        // create the history table
-        Schema::dropIfExists('i_class_history');
-        DB::unprepared("CREATE TABLE i_class_history LIKE i_classes;");
-        // alter table
-        DB::unprepared("ALTER TABLE i_class_history MODIFY COLUMN id int(11) NOT NULL, 
-   DROP PRIMARY KEY, ENGINE = MyISAM, ADD action VARCHAR(8) DEFAULT 'insert' FIRST, 
-   ADD revision INT(6) NOT NULL AUTO_INCREMENT AFTER action,
-   ADD PRIMARY KEY (id, revision);");
+        // create the history table (MySQL only, skipped for SQLite)
+        if (DB::getDriverName() !== 'sqlite') {
+            Schema::dropIfExists('i_class_history');
+            DB::unprepared("CREATE TABLE i_class_history LIKE i_classes;");
+            // alter table
+            DB::unprepared("ALTER TABLE i_class_history MODIFY COLUMN id int(11) NOT NULL,
+       DROP PRIMARY KEY, ENGINE = MyISAM, ADD action VARCHAR(8) DEFAULT 'insert' FIRST,
+       ADD revision INT(6) NOT NULL AUTO_INCREMENT AFTER action,
+       ADD PRIMARY KEY (id, revision);");
 
-        DB::unprepared("DROP TRIGGER IF EXISTS i_class__ai;");
-        DB::unprepared("DROP TRIGGER IF EXISTS i_class__au;");
-        //create after insert trigger
-        DB::unprepared("CREATE TRIGGER i_class__ai AFTER INSERT ON i_classes FOR EACH ROW
-    INSERT INTO i_class_history SELECT 'insert', NULL, d.* 
-    FROM i_classes AS d WHERE d.id = NEW.id;");
-        DB::unprepared("CREATE TRIGGER i_class__au AFTER UPDATE ON i_classes FOR EACH ROW
-    INSERT INTO i_class_history SELECT 'update', NULL, d.*
-    FROM i_classes AS d WHERE d.id = NEW.id;");
+            DB::unprepared("DROP TRIGGER IF EXISTS i_class__ai;");
+            DB::unprepared("DROP TRIGGER IF EXISTS i_class__au;");
+            //create after insert trigger
+            DB::unprepared("CREATE TRIGGER i_class__ai AFTER INSERT ON i_classes FOR EACH ROW
+        INSERT INTO i_class_history SELECT 'insert', NULL, d.*
+        FROM i_classes AS d WHERE d.id = NEW.id;");
+            DB::unprepared("CREATE TRIGGER i_class__au AFTER UPDATE ON i_classes FOR EACH ROW
+        INSERT INTO i_class_history SELECT 'update', NULL, d.*
+        FROM i_classes AS d WHERE d.id = NEW.id;");
+        }
 
 
     }

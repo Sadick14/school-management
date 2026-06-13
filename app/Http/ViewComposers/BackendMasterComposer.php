@@ -28,8 +28,8 @@ class BackendMasterComposer
         }
 
 
-        $view->with('maintainer', 'CloudSchool');
-        $view->with('maintainer_url', 'http://cloudschoolbd.com');
+        $view->with('maintainer', 'DevSuite Edu');
+        $view->with('maintainer_url', 'http://devsuiteedu.com');
         $view->with('majorVersion', '3');
         $view->with('minorVersion', '0');
         $view->with('patchVersion', '1');

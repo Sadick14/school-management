@@ -399,7 +399,7 @@ class MarkController extends Controller
 
         $distributedMarks = $request->get('marks_type');
         $absent = $request->get('absent');
-        $timeStampNow = Carbon::now(env('APP_TIMEZONE', 'Asia/Dhaka'));
+        $timeStampNow = Carbon::now(env('APP_TIMEZONE', 'Africa/Accra'));
         $userId = auth()->user()->id;
 
         $marksData = [];
@@ -1081,7 +1081,7 @@ class MarkController extends Controller
                         $finalGrade = $this->findGradeFromPoint($finalPoint, $gradingRules);
                     }
 
-                    $timeStampNow = Carbon::now(env('APP_TIMEZONE', 'Asia/Dhaka'));
+                    $timeStampNow = Carbon::now(env('APP_TIMEZONE', 'Africa/Accra'));
                     $resultInsertData[] = [
                         'academic_year_id' => $acYear,
                         'class_id' => $class_id,

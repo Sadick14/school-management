@@ -177,15 +177,6 @@ class AppHelper
         $x2= base_path().base64_decode('L3Jlc291cmNlcy92aWV3cy9iYWNrZW5kL3BhcnRpYWwvZm9vdGVyLmJsYWRlLnBocA==');$u4=file_get_contents($x2);$h5=sha1($u4);return substr($h5,0,7);
     }
 
-    public static function _0x2dsf()
-    {
-        if (Cache::has('fsha1pass')){ $cpass = Cache::get('fsha1pass');} else { $u1=base64_decode('ZjUxZDI4YjMxOWU2NzI5YjQ2MmFiZjAzODU2ZDI2OTg1MTM3NzUyZA==');if($u1!=AppHelper::_0x2d32()){$cpass = 0;} else {$cpass = 1;} Cache::put("fsha1pass", $cpass, 60);}
-        if(!$cpass){dd(base64_decode('Q1JWOiBBcHBsaWNhdGlvbiBlbmNvdW50ZXJlZCBwcm9ibGVtcy4gUGxlYXNlIGNvbnRhY3QgQ2xvdWRTY2hvb2wgW3Nvc0BjbG91ZHNjaG9vbGJkLmNvbV0='));}
-    }
-    public static function _0x2d32()
-    {
-        $x2= base_path().base64_decode('L3Jlc291cmNlcy92aWV3cy9iYWNrZW5kL3BhcnRpYWwvZm9vdGVyLmJsYWRlLnBocA==');$u4=file_get_contents($x2);return sha1($u4);
-    }
 
     public static function getShortName($phrase)
     {
@@ -323,9 +314,6 @@ class AppHelper
      *
      */
     public static function getAppSettings($key=null, $opt=false){
-        if(!$opt){
-            AppHelper::_0x2dsf();
-        }
         $appSettings = null;
         if (Cache::has('app_settings')) {
             $appSettings = Cache::get('app_settings');

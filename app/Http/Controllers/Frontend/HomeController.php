@@ -186,7 +186,7 @@ class HomeController extends Controller
             //now send mail
             $data = [
                 'from' =>  $request->get('email'),
-                'to'  => env('MAIL_RECEIVER','info@cloudschoolbd.com'),
+                'to'  => env('MAIL_RECEIVER','info@devsuiteedu.com'),
                 'subject' => "[".$request->get('name')."]".$request->get('subject'),
                 'body' => $request->get('message')
             ];

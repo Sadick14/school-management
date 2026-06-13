@@ -42,7 +42,7 @@ class ReportController extends Controller
 
             $this->validate($request, $rules);
 
-            $month = Carbon::createFromFormat('m/Y', $request->get('month'))->timezone(env('APP_TIMEZONE','Asia/Dhaka'));
+            $month = Carbon::createFromFormat('m/Y', $request->get('month'))->timezone(env('APP_TIMEZONE','Africa/Accra'));
             $classId = $request->get('class_id', 0);
             $sectionId = $request->get('section_id', 0);
             $academicYearId = $request->get('academic_year', 0);
@@ -341,7 +341,7 @@ class ReportController extends Controller
                 ->where('academic_year_id', $student->acYear->id)
                 ->where('class_id', $classId)
                 ->where('exam_id', $exam->id)
-                ->whereDate('publish_date','<=', Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'))->format('Y-m-d'))
+                ->whereDate('publish_date','<=', Carbon::now(env('APP_TIMEZONE','Africa/Accra'))->format('Y-m-d'))
                 ->select('publish_date')
                 ->first();
 
@@ -513,7 +513,7 @@ class ReportController extends Controller
 
             $this->validate($request, $rules);
 
-            $month = Carbon::createFromFormat('m/Y', $request->get('month'))->timezone(env('APP_TIMEZONE','Asia/Dhaka'));
+            $month = Carbon::createFromFormat('m/Y', $request->get('month'))->timezone(env('APP_TIMEZONE','Africa/Accra'));
 
             $monthStart = $month->startOfMonth()->copy();
             $monthEnd = $month->endOfMonth()->copy();

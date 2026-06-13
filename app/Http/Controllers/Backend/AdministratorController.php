@@ -434,7 +434,7 @@ class AdministratorController extends Controller
 
         $rolePermissions = [];
 
-        $now = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'));
+        $now = Carbon::now(env('APP_TIMEZONE','Africa/Accra'));
 
         if(count($permissionList)) {
 

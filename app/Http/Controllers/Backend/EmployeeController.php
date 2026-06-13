@@ -450,7 +450,7 @@ class EmployeeController extends Controller
         $status = (string)$request->get('status');
         $employee->status = $status;
         if($status == '0'){
-            $employee->leave_date = Carbon::now(env('APP_TIMEZONE','Asia/Dhaka'))->format('d/m/Y');
+            $employee->leave_date = Carbon::now(env('APP_TIMEZONE','Africa/Accra'))->format('d/m/Y');
         }
         else{
             $employee->leave_date = null;

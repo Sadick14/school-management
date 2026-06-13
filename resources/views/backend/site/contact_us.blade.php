@@ -51,7 +51,7 @@
 
                             <div class="form-group has-feedback">
                                 <label for="email">Email<span class="text-danger">*</span></label>
-                                <input type="email" name="email" class="form-control" placeholder="contact@cloudschoolbd.com" value="@if($email){{ $email->meta_value }}@endif" maxlength="255" required />
+                                <input type="email" name="email" class="form-control" placeholder="contact@devsuiteedu.com" value="@if($email){{ $email->meta_value }}@endif" maxlength="255" required />
                                 <span class="glyphicon glyphicon-info form-control-feedback"></span>
                                 <span class="text-danger">{{ $errors->first('email') }}</span>
                             </div>
