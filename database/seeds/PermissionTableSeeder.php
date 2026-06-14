@@ -347,6 +347,26 @@ class PermissionTableSeeder extends Seeder
                 "name" => "Student Edit",
                 "group" => "Academic"
             ],
+            [   "slug" => "student.pending_payment",
+                "name" => "Student Pending Payment View",
+                "group" => "Academic"
+            ],
+            [   "slug" => "student.bulk_enroll_form",
+                "name" => "Student Bulk Enroll View",
+                "group" => "Academic"
+            ],
+            [   "slug" => "student.search_existing",
+                "name" => "Student Search Existing",
+                "group" => "Academic"
+            ],
+            [   "slug" => "student.bulk_enroll_save",
+                "name" => "Student Bulk Enroll Create",
+                "group" => "Academic"
+            ],
+            [   "slug" => "student.promote_batch",
+                "name" => "Student Promote Batch",
+                "group" => "Academic"
+            ],
             [   "slug" => "teacher.index",
                 "name" => "Teacher View",
                 "group" => "Academic"
@@ -905,6 +925,8 @@ class PermissionTableSeeder extends Seeder
             [   "slug" => "finance.payment.store", "name" => "Payment Create", "group" => "Finance" ],
             [   "slug" => "finance.payment.receipt", "name" => "Payment Receipt", "group" => "Finance" ],
             [   "slug" => "finance.payment.generate_billing", "name" => "Payment Generate Billing", "group" => "Finance" ],
+            [   "slug" => "finance.get_class_students", "name" => "Finance Get Class Students", "group" => "Finance" ],
+            [   "slug" => "finance.record_bulk_payments", "name" => "Finance Record Bulk Payments", "group" => "Finance" ],
             [   "slug" => "finance.expense.index", "name" => "Expense View", "group" => "Finance" ],
             [   "slug" => "finance.expense.create", "name" => "Expense Create", "group" => "Finance" ],
             [   "slug" => "finance.expense.store", "name" => "Expense Create", "group" => "Finance" ],

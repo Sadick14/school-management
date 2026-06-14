@@ -293,6 +293,21 @@
 
                             </div>
 
+                            @if(!$regiInfo)
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group has-feedback">
+                                        <label for="is_new_student">Student Status<span class="text-danger">*</span>
+                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Is this a new student to the school or continuing?"></i>
+                                        </label>
+                                        {!! Form::select('is_new_student', ['1' => 'New Student', '0' => 'Continuing Student'], old('is_new_student'), ['placeholder' => 'Select...', 'class' => 'form-control select2', 'required' => 'true']) !!}
+                                        <span class="form-control-feedback"></span>
+                                        <span class="text-danger">{{ $errors->first('is_new_student') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
                             <div class="row">
                                 <div class="col-md-2">
                                     <div class="form-group has-feedback">

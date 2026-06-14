@@ -77,7 +77,7 @@ class StudentController extends Controller
         }
 
         // Build query for students
-        $query = Registration::where('status', $status)->with('student');
+        $query = Registration::where('status', $status)->with('student', 'class');
 
         if($acYear) {
             $query->where('academic_year_id', $acYear);
@@ -232,6 +232,7 @@ class StudentController extends Controller
             'house' => 'nullable|max:100',
             'siblings' => 'nullable|max:255',
             'sms_receive_no' => 'required|integer',
+            'is_new_student' => 'nullable|integer|in:0,1',
 
         ];
         //if it college then need another 2 feilds
@@ -409,6 +410,9 @@ class StudentController extends Controller
             $regiNo .= str_pad(++$totalStudent,3,'0',STR_PAD_LEFT);
 
 
+            $isNewStudent = (int) $request->get('is_new_student', 0);
+            $registrationStatus = $isNewStudent ? AppHelper::INACTIVE : AppHelper::ACTIVE;
+
             $registrationData = [
                 'regi_no' => $regiNo,
                 'student_id' => $student->id,
@@ -419,11 +423,16 @@ class StudentController extends Controller
                 'shift' => $data['shift'] ?? null,
                 'card_no' => $data['card_no'] ?? null,
                 'board_regi_no' => $data['board_regi_no'] ?? null,
-                'house' => $data['house'] ?? ''
+                'house' => $data['house'] ?? '',
+                'status' => $registrationStatus,
             ];
 
            $registration =  Registration::create($registrationData);
            $registration->subjects()->sync($subjects);
+
+            if ($isNewStudent) {
+                app('App\Services\BillingService')->generateRegistrationFee($registration->id);
+            }
 
             // now commit the database
             DB::commit();
@@ -438,6 +447,11 @@ class StudentController extends Controller
             Cache::forget('studentCount');
             Cache::forget('student_count_by_class');
             Cache::forget('student_count_by_section');
+
+            if ($isNewStudent) {
+                return redirect()->route('student.pending_payment', $registration->id)
+                    ->with('info', 'Student registration created. Please collect registration fee to activate the account.');
+            }
 
             return redirect()->route('student.create')->with('success', 'Student added!');
 
@@ -1074,5 +1088,185 @@ class StudentController extends Controller
 
         return response()->json($students);
 
+    }
+
+    public function pendingPayment($id)
+    {
+        $registration = Registration::with(['student', 'class', 'acYear'])
+            ->findOrFail($id);
+
+        if ($registration->status != AppHelper::INACTIVE) {
+            return redirect()->route('student.index')
+                ->with('info', 'This registration is already active.');
+        }
+
+        $dues = StudentLedger::where('registration_id', $id)
+            ->where('fee_type_id', function ($q) {
+                $q->select('id')->from('fee_types')->where('code', 'REGISTRATION');
+            })
+            ->where('balance', '>', 0)
+            ->get();
+
+        return view('backend.student.pending-payment', compact('registration', 'dues'));
+    }
+
+    public function bulkEnrollForm()
+    {
+        $classes = IClass::where('status', AppHelper::ACTIVE)
+            ->orderBy('order', 'asc')
+            ->pluck('name', 'id');
+
+        $academicYearId = AppHelper::getAcademicYear();
+        $academicYear = AcademicYear::find($academicYearId);
+
+        return view('backend.student.bulk-enroll', compact('classes', 'academicYear', 'academicYearId'));
+    }
+
+    public function searchExistingStudents(Request $request)
+    {
+        $classId = $request->get('class_id');
+        $search = $request->get('q', '');
+
+        $query = Student::where('status', AppHelper::ACTIVE);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('nick_name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $students = $query->limit(15)->get(['id', 'name', 'nick_name']);
+
+        return response()->json($students->map(function ($s) use ($classId) {
+            $alreadyEnrolled = Registration::where('student_id', $s->id)
+                ->where('class_id', $classId)
+                ->where('status', AppHelper::ACTIVE)
+                ->exists();
+
+            return [
+                'id' => $s->id,
+                'name' => $s->name,
+                'nick_name' => $s->nick_name,
+                'already_enrolled' => $alreadyEnrolled
+            ];
+        }));
+    }
+
+    public function bulkEnrollSave(Request $request)
+    {
+        $classId = $request->get('class_id');
+        $studentNames = $request->get('student_names', []);
+        $academicYearId = AppHelper::getAcademicYear();
+
+        if (!$classId || !count($studentNames)) {
+            return response()->json(['success' => false, 'message' => 'No students provided'], 422);
+        }
+
+        try {
+            $class = IClass::findOrFail($classId);
+            $academicYear = AcademicYear::findOrFail($academicYearId);
+            $billingService = app('App\Services\BillingService');
+            $activeTerm = AppHelper::getActiveTerm($academicYearId);
+
+            $enrolled = 0;
+            foreach ($studentNames as $name) {
+                $name = trim($name);
+                if (!$name) continue;
+
+                $student = Student::where('name', $name)
+                    ->where('status', AppHelper::ACTIVE)
+                    ->first();
+
+                if (!$student) {
+                    continue;
+                }
+
+                $existingRegi = Registration::where('student_id', $student->id)
+                    ->where('class_id', $classId)
+                    ->where('academic_year_id', $academicYearId)
+                    ->first();
+
+                if ($existingRegi) continue;
+
+                $totalInClass = Registration::where('academic_year_id', $academicYearId)
+                    ->where('class_id', $classId)->withTrashed()->count();
+
+                $regiNo = $academicYear->start_date->format('y') . (string)$class->numeric_value;
+                $regiNo .= str_pad(++$totalInClass, 3, '0', STR_PAD_LEFT);
+
+                $registration = Registration::create([
+                    'regi_no' => $regiNo,
+                    'student_id' => $student->id,
+                    'class_id' => $classId,
+                    'academic_year_id' => $academicYearId,
+                    'status' => AppHelper::ACTIVE,
+                ]);
+
+                if ($activeTerm) {
+                    $billingService->generateTermFees($academicYearId, $activeTerm->id, $classId);
+                }
+
+                $enrolled++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $enrolled . ' student(s) enrolled successfully',
+                'enrolled' => $enrolled
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function promoteStudents(Request $request)
+    {
+        $classId = $request->get('class_id');
+        $toClassId = $request->get('to_class_id');
+        $academicYearId = AppHelper::getAcademicYear();
+
+        if (!$classId || !$toClassId) {
+            return response()->json(['success' => false, 'message' => 'Invalid class selection'], 422);
+        }
+
+        try {
+            $fromClass = IClass::findOrFail($classId);
+            $toClass = IClass::findOrFail($toClassId);
+            $academicYear = AcademicYear::findOrFail($academicYearId);
+
+            $registrations = Registration::where('class_id', $classId)
+                ->where('academic_year_id', $academicYearId)
+                ->where('status', AppHelper::ACTIVE)
+                ->with('student')
+                ->get();
+
+            $promoted = 0;
+            foreach ($registrations as $reg) {
+                $totalInClass = Registration::where('academic_year_id', $academicYearId)
+                    ->where('class_id', $toClassId)->withTrashed()->count();
+
+                $regiNo = $academicYear->start_date->format('y') . (string)$toClass->numeric_value;
+                $regiNo .= str_pad(++$totalInClass, 3, '0', STR_PAD_LEFT);
+
+                Registration::create([
+                    'regi_no' => $regiNo,
+                    'student_id' => $reg->student_id,
+                    'class_id' => $toClassId,
+                    'academic_year_id' => $academicYearId,
+                    'status' => AppHelper::ACTIVE,
+                ]);
+
+                $promoted++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $promoted . ' student(s) promoted to ' . $toClass->name,
+                'promoted' => $promoted
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
     }
 }

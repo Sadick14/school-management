@@ -1,22 +1,5 @@
 <aside class="main-sidebar">
     <section class="sidebar">
-        <div class="sidebar-logo-container hidden-xs">
-            <div class="logo-circle">
-                @if(isset($appSettings['institute_settings']['short_name']))
-                    {{ substr($appSettings['institute_settings']['short_name'], 0, 1) }}
-                @else
-                    D
-                @endif
-            </div>
-            <span class="logo-text">
-                @if(isset($appSettings['institute_settings']['short_name']))
-                    {{$appSettings['institute_settings']['short_name']}}
-                @else
-                    DevSuite Edu
-                @endif
-            </span>
-        </div>
-        
         <ul class="sidebar-menu" data-widget="tree">
             <li>
                 <a href="{{ URL::route('user.dashboard') }}">

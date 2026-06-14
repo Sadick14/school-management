@@ -39,7 +39,11 @@ class PaymentController extends Controller
             ->orderBy('id', 'desc')
             ->pluck('title', 'id');
 
-        return view('backend.finance.payment.list', compact('payments', 'academicYears', 'academicYearId'));
+        $classes = IClass::where('status', AppHelper::ACTIVE)
+            ->orderBy('order', 'asc')
+            ->pluck('name', 'id');
+
+        return view('backend.finance.payment.list', compact('payments', 'academicYears', 'academicYearId', 'classes'));
     }
 
     public function wizard()
@@ -216,6 +220,9 @@ class PaymentController extends Controller
                 'note' => $request->get('note'),
             ], $request->get('items'));
 
+            $registrationId = $request->get('registration_id');
+            $this->activateRegistrationIfPaid($registrationId);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Payment recorded successfully.',
@@ -269,6 +276,28 @@ class PaymentController extends Controller
         return redirect()->back()->with('success', "{$count} term fee ledger entries generated.");
     }
 
+    protected function activateRegistrationIfPaid($registrationId)
+    {
+        $registration = Registration::find($registrationId);
+        if (!$registration || $registration->status == AppHelper::ACTIVE) {
+            return;
+        }
+
+        $registrationFeeType = FeeType::where('code', 'REGISTRATION')->first();
+        if (!$registrationFeeType) {
+            return;
+        }
+
+        $unpaidBalance = StudentLedger::where('registration_id', $registrationId)
+            ->where('fee_type_id', $registrationFeeType->id)
+            ->where('balance', '>', 0)
+            ->sum('balance');
+
+        if ($unpaidBalance <= 0) {
+            $registration->update(['status' => AppHelper::ACTIVE]);
+        }
+    }
+
     protected function getOptionalFeesForRegistrations(array $registrationIds)
     {
         $registrations = Registration::whereIn('id', $registrationIds)->get();
@@ -307,5 +336,105 @@ class PaymentController extends Controller
         }
 
         return $available;
+    }
+
+    public function getClassStudents(Request $request)
+    {
+        $classId = $request->get('class_id');
+        $academicYearId = AppHelper::getAcademicYear();
+
+        $students = Registration::where('class_id', $classId)
+            ->where('academic_year_id', $academicYearId)
+            ->where('status', AppHelper::ACTIVE)
+            ->with('student')
+            ->get(['id', 'student_id', 'regi_no'])
+            ->map(function ($reg) {
+                return [
+                    'id' => $reg->student_id,
+                    'name' => $reg->student->name,
+                    'regi_no' => $reg->regi_no,
+                ];
+            });
+
+        return response()->json(['success' => true, 'students' => $students]);
+    }
+
+    public function recordBulkPayments(Request $request)
+    {
+        $classId = $request->get('class_id');
+        $payments = $request->get('payments', []);
+        $academicYearId = AppHelper::getAcademicYear();
+
+        if (!$classId || !count($payments)) {
+            return response()->json(['success' => false, 'message' => 'No payments provided'], 422);
+        }
+
+        try {
+            $recorded = 0;
+
+            foreach ($payments as $payment) {
+                $studentId = $payment['student_id'];
+                $amount = (float) $payment['amount'];
+                $paymentDate = Carbon::createFromFormat('d/m/Y', $payment['payment_date']);
+                $paymentMethod = $payment['payment_method'];
+
+                $registration = Registration::where('student_id', $studentId)
+                    ->where('class_id', $classId)
+                    ->where('academic_year_id', $academicYearId)
+                    ->first();
+
+                if (!$registration) {
+                    continue;
+                }
+
+                $feePayment = FeePayment::create([
+                    'receipt_no' => app('App\Services\BillingService')->generateReceiptNo(),
+                    'payment_date' => $paymentDate,
+                    'academic_year_id' => $academicYearId,
+                    'registration_id' => $registration->id,
+                    'student_id' => $studentId,
+                    'total_amount' => $amount,
+                    'payment_method' => $paymentMethod,
+                    'paid_by' => 'Bulk Record',
+                    'note' => 'Recorded from past payments',
+                ]);
+
+                $schoolFeeType = FeeType::where('code', 'SCHOOL')->first();
+                if ($schoolFeeType) {
+                    $ledgers = StudentLedger::where('registration_id', $registration->id)
+                        ->where('fee_type_id', $schoolFeeType->id)
+                        ->where('balance', '>', 0)
+                        ->orderBy('billing_date')
+                        ->limit(1)
+                        ->get();
+
+                    foreach ($ledgers as $ledger) {
+                        if ($amount <= 0) break;
+
+                        $amountApplied = min($amount, $ledger->balance);
+                        $ledger->update([
+                            'amount_paid' => $ledger->amount_paid + $amountApplied,
+                            'balance' => $ledger->balance - $amountApplied,
+                        ]);
+
+                        $feePayment->items()->create([
+                            'student_ledger_id' => $ledger->id,
+                            'amount_applied' => $amountApplied,
+                        ]);
+
+                        $amount -= $amountApplied;
+                    }
+                }
+
+                $recorded++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $recorded . ' payment(s) recorded successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
     }
 }

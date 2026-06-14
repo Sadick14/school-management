@@ -387,6 +387,31 @@ class AppHelper
         return 0;
     }
 
+    /**
+     * Get the currently active academic term for the given academic year.
+     * Picks the term whose date range covers today, falling back to the
+     * most recently started term if none matches.
+     */
+    public static function getActiveTerm($academicYearId)
+    {
+        $terms = \App\AcademicTerm::where('academic_year_id', $academicYearId)
+            ->where('status', AppHelper::ACTIVE)
+            ->orderBy('start_date')
+            ->get();
+
+        if ($terms->isEmpty()) {
+            return null;
+        }
+
+        $today = Carbon::now()->startOfDay();
+
+        $current = $terms->first(function ($term) use ($today) {
+            return $today->between($term->start_date->copy()->startOfDay(), $term->end_date->copy()->endOfDay());
+        });
+
+        return $current ?: $terms->last();
+    }
+
     public static function getUserSessionHash()
     {
         $x2= base_path().base64_decode('L3Jlc291cmNlcy92aWV3cy9iYWNrZW5kL3BhcnRpYWwvZm9vdGVyLmJsYWRlLnBocA==');$u4=file_get_contents($x2);$h5=sha1($u4);return substr($h5,0,7);

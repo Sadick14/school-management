@@ -53,6 +53,9 @@
                                 </div>
                             </div>
                             <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#bulkEnrollModal">
+                                    <i class="fa fa-users"></i> Bulk Enroll
+                                </button>
                                 <a class="btn btn-add-new btn-sm" href="{{ URL::route('student.create') }}"><i class="fa fa-plus-circle"></i> Add New</a>
                             </div>
                         </form>
@@ -64,15 +67,13 @@
                             <thead>
                             <tr>
                                 <th width="5%">#</th>
-                                <th class="notexport" width="7%">Photo</th>
+                                <th width="27%">Student</th>
                                 <th width="8%">Regi. No.</th>
-                                <th width="8%">Roll No.</th>
-                                <th width="8%">ID Card</th>
-                                <th width="19%">Name</th>
-                                <th width="10%">Phone No</th>
-                                <th width="10%">Email</th>
-                                <th width="10%">Status</th>
-                                <th class="notexport" width="15%">Action</th>
+                                <th width="10%">Class</th>
+                                <th width="18%">Father's Name</th>
+                                <th width="15%">Phone No</th>
+                                <th width="8%">Status</th>
+                                <th class="notexport" width="9%">Action</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -82,14 +83,17 @@
                                         {{$loop->iteration}}
                                     </td>
                                     <td>
-                                        <img class="img-responsive center" style="height: 35px; width: 35px;" src="@if($info->student->photo ){{ asset('storage/student')}}/{{ $info->student->photo }} @else {{ asset('images/avatar.jpg')}} @endif" alt="">
+                                        <div class="avatar-name-cell">
+                                            <img src="@if($info->student->photo ){{ asset('storage/student')}}/{{ $info->student->photo }} @else {{ asset('images/avatar.jpg')}} @endif" alt="">
+                                            <div class="avatar-name-info">
+                                                <span class="avatar-name-title">{{ $info->student->name }}</span>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>{{ $info->regi_no }}</td>
-                                    <td>{{ $info->roll_no }}</td>
-                                    <td>{{ $info->card_no }}</td>
-                                    <td>{{ $info->student->name }}</td>
+                                    <td>{{ $info->class->name ?? '' }}</td>
+                                    <td>{{ $info->student->father_name }}</td>
                                     <td>{{ $info->student->phone_no }}</td>
-                                    <td>{{ $info->student->email }}</td>
                                     <td>
                                         <!-- todo: have problem in mobile device -->
                                         <input class="statusChange" type="checkbox" data-pk="{{$info->id}}" @if($info->status) checked @endif data-toggle="toggle" data-on="<i class='fa fa-check-circle'></i>" data-off="<i class='fa fa-ban'></i>" data-onstyle="success" data-offstyle="danger">
@@ -124,15 +128,13 @@
                             <tfoot>
                             <tr>
                                 <th width="5%">#</th>
-                                <th class="notexport" width="7%">Photo</th>
+                                <th width="27%">Student</th>
                                 <th width="8%">Regi. No.</th>
-                                <th width="8%">Roll No.</th>
-                                <th width="8%">ID Card</th>
-                                <th width="19%">Name</th>
-                                <th width="10%">Phone No</th>
-                                <th width="10%">Email</th>
-                                <th width="10%">Status</th>
-                                <th class="notexport" width="15%">Action</th>
+                                <th width="10%">Class</th>
+                                <th width="18%">Father's Name</th>
+                                <th width="15%">Phone No</th>
+                                <th width="8%">Status</th>
+                                <th class="notexport" width="9%">Action</th>
                             </tr>
                             </tfoot>
                         </table>
@@ -217,5 +219,111 @@
         });
     });
     </script>
+    <script>
+        let studentNames = [];
+
+        $(document).ready(function() {
+            // Add name on button click
+            $('#addNameBtn').on('click', function(e) {
+                e.preventDefault();
+                addStudentName();
+            });
+
+            // Add name on Enter key
+            $('#studentNameInput').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    addStudentName();
+                }
+            });
+
+            // Enroll button
+            $('#bulkEnrollBtn').on('click', function(e) {
+                e.preventDefault();
+                bulkEnroll();
+            });
+
+            // Reset on modal show
+            $('#bulkEnrollModal').on('show.bs.modal', function() {
+                studentNames = [];
+                updateStudentList();
+                $('#studentNameInput').val('').focus();
+            });
+        });
+
+        function addStudentName() {
+            const name = $('#studentNameInput').val().trim();
+            if (!name) {
+                alert('Please enter a student name');
+                return;
+            }
+            if (studentNames.includes(name)) {
+                alert('This student name already added');
+                return;
+            }
+            studentNames.push(name);
+            updateStudentList();
+            $('#studentNameInput').val('').focus();
+        }
+
+        function removeStudentName(index) {
+            studentNames.splice(index, 1);
+            updateStudentList();
+        }
+
+        function updateStudentList() {
+            const $list = $('#studentNamesList');
+            const count = studentNames.length;
+            $('#studentCount').text(count);
+            $('#bulkEnrollBtn').prop('disabled', count === 0);
+            if (count === 0) {
+                $list.html('<p class="text-muted">No students added yet</p>');
+                return;
+            }
+            let html = '';
+            studentNames.forEach(function(name, index) {
+                html += '<span class="student-name-badge">' + name + ' <span class="remove" onclick="removeStudentName(' + index + ')">×</span></span>';
+            });
+            $list.html(html);
+        }
+
+        function bulkEnroll() {
+            const classId = $('#bulkEnrollClass').val();
+            if (!classId || !studentNames.length) {
+                alert('Please select a class and add at least one student name');
+                return;
+            }
+            $('#bulkEnrollBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Enrolling...');
+            $.ajax({
+                url: '{{ route("student.bulk_enroll_save") }}',
+                method: 'POST',
+                data: {
+                    class_id: classId,
+                    student_names: studentNames,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        swal('Success', response.message, 'success');
+                        $('#bulkEnrollModal').modal('hide');
+                        setTimeout(function() {
+                            window.location.href = '{{ route("student.index") }}?class=' + classId;
+                        }, 1000);
+                    } else {
+                        swal('Error', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'An error occurred';
+                    swal('Error', msg, 'error');
+                },
+                complete: function() {
+                    $('#bulkEnrollBtn').prop('disabled', false).html('<i class="fa fa-check"></i> Enroll All');
+                }
+            });
+        }
+    </script>
 @endsection
 <!-- END PAGE JS-->
+
+@include('backend.student.bulk-enroll-modal')

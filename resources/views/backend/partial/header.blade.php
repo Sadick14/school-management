@@ -1,9 +1,25 @@
 <header class="main-header">
     <nav class="navbar navbar-static-top" style="background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
-        
+
+        <div class="header-logo-container hidden-xs">
+            <div class="logo-circle">
+                @if(isset($appSettings['institute_settings']['short_name']))
+                    {{ substr($appSettings['institute_settings']['short_name'], 0, 1) }}
+                @else
+                    D
+                @endif
+            </div>
+            <span class="logo-text">
+                @if(isset($appSettings['institute_settings']['short_name']))
+                    {{$appSettings['institute_settings']['short_name']}}
+                @else
+                    DevSuite Edu
+                @endif
+            </span>
+        </div>
+
         <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button" style="color: #64748b; padding: 15px; float: left;">
             <span class="sr-only">Toggle navigation</span>
-            <i class="fa fa-bars" style="font-size: 18px;"></i>
         </a>
 
         <div class="navbar-search hidden-xs" style="float: left; padding: 7px 15px;">
@@ -16,11 +32,11 @@
         <div class="navbar-custom-menu" style="display: flex; align-items: center; padding-right: 20px;">
             <ul class="nav navbar-nav" style="display: flex; align-items: center; gap: 15px;">
                 
-                <li>
+                <!-- <li>
                     <a href="#" data-toggle="control-sidebar" style="color: #64748b; font-size: 18px; padding: 10px;">
                         <i class="fa fa-cog"></i>
                     </a>
-                </li>
+                </li> -->
 
                 <li class="dropdown messages-menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="color: #64748b; font-size: 18px; padding: 10px; position: relative;">
@@ -36,7 +52,7 @@
                     </ul>
                 </li>                                                 
                 
-                @if($show_language)
+                <!-- @if($show_language)
                 <li class="dropdown lang-menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="padding: 10px;">
                         <img class="language-img" src="{{ asset('images/lang/'.$locale.'.png') }}" style="width: 20px; border-radius: 50%;">
@@ -57,7 +73,7 @@
                         @endforeach
                     </ul>
                 </li>
-                @endif
+                @endif -->
                 
                 <li class="dropdown user user-menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="display: flex; align-items: center; gap: 12px; padding: 10px; border-left: 1px solid #f1f5f9; margin-left: 10px; padding-left: 20px;">

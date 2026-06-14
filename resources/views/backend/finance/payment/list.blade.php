@@ -14,13 +14,16 @@
                 <div class="box box-info">
                     <div class="box-header border">
                         <form method="get" class="form-inline">
-                            <select name="academic_year" class="form-control select2" onchange="this.form.submit()">
+                            <select name="academic_year" class="form-control select2 academic-year-select" onchange="this.form.submit()">
                                 @foreach($academicYears as $id => $title)
                                     <option value="{{ $id }}" @if($academicYearId == $id) selected @endif>{{ $title }}</option>
                                 @endforeach
                             </select>
                         </form>
                         <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#bulkRecordPaymentsModal">
+                                <i class="fa fa-history"></i> Record Past Payments
+                            </button>
                             <a class="btn btn-add-new btn-sm" href="{{ URL::route('finance.payment.wizard') }}"><i class="fa fa-money"></i> Collect Payment</a>
                         </div>
                     </div>
@@ -44,7 +47,17 @@
                                     <tr>
                                         <td>{{ $payment->receipt_no }}</td>
                                         <td>{{ $payment->payment_date ? $payment->payment_date->format('d/m/Y') : '' }}</td>
-                                        <td>{{ $payment->student ? $payment->student->name : '' }}</td>
+                                        <td>
+                                            @if($payment->student)
+                                                <div class="avatar-name-cell">
+                                                    <img src="@if($payment->student->photo){{ asset('storage/student')}}/{{ $payment->student->photo }} @else {{ asset('images/avatar.jpg')}} @endif" alt="">
+                                                    <div class="avatar-name-info">
+                                                        <span class="avatar-name-title">{{ $payment->student->name }}</span>
+                                                        <span class="avatar-name-subtitle">{{ $payment->receipt_no }}</span>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td>{{ $payment->registration && $payment->registration->class ? $payment->registration->class->name : '' }}</td>
                                         <td>
                                             @foreach($payment->items->pluck('ledger.feeType.name')->filter()->unique() as $feeTypeName)
@@ -54,8 +67,10 @@
                                         <td>{{ number_format($payment->total_amount, 2) }}</td>
                                         <td>{{ AppHelper::PAYMENT_METHODS[$payment->payment_method] ?? $payment->payment_method }}</td>
                                         <td>
-                                            <a target="_blank" href="{{ URL::route('finance.payment.receipt', $payment->id) }}" class="btn btn-info btn-sm" title="View Receipt"><i class="fa fa-eye"></i> View</a>
-                                            <a href="{{ URL::route('finance.payment.receipt', $payment->id) }}?download=1" class="btn btn-default btn-sm" title="Download Receipt"><i class="fa fa-download"></i> Download</a>
+                                            <div class="btn-group">
+                                                <a target="_blank" href="{{ URL::route('finance.payment.receipt', $payment->id) }}" class="btn btn-info btn-sm" title="View Receipt"><i class="fa fa-eye"></i></a>
+                                                <a href="{{ URL::route('finance.payment.receipt', $payment->id) }}?download=1" class="btn btn-default btn-sm" title="Download Receipt"><i class="fa fa-download"></i></a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -71,6 +86,9 @@
         </div>
     </section>
 @endsection
+
 @section('extraScript')
     <script type="text/javascript">$(document).ready(function () { Generic.initCommonPageJS(); });</script>
 @endsection
+
+@include('backend.finance.payment.bulk-record-modal')

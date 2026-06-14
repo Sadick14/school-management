@@ -186,6 +186,16 @@ Route::group(
     Route::resource('student', 'StudentController');
     Route::post('student/status/{id}', 'StudentController@changeStatus')
         ->name('student.status');
+    Route::get('student/{id}/pending-payment', 'StudentController@pendingPayment')
+        ->name('student.pending_payment');
+    Route::get('student/bulk-enroll/form', 'StudentController@bulkEnrollForm')
+        ->name('student.bulk_enroll_form');
+    Route::post('student/bulk-enroll/search', 'StudentController@searchExistingStudents')
+        ->name('student.search_existing');
+    Route::post('student/bulk-enroll/save', 'StudentController@bulkEnrollSave')
+        ->name('student.bulk_enroll_save');
+    Route::post('student/promote/batch', 'StudentController@promoteStudents')
+        ->name('student.promote_batch');
     Route::get('student-list-by-filter', 'StudentController@studentListByFitler')
         ->name('student.list_by_filter');
 
@@ -330,6 +340,8 @@ Route::group(
     Route::post('finance/payment/store', 'PaymentController@store')->name('finance.payment.store');
     Route::get('finance/payment/receipt/{id}', 'PaymentController@receipt')->name('finance.payment.receipt');
     Route::post('finance/payment/generate-billing', 'PaymentController@generateBilling')->name('finance.payment.generate_billing');
+    Route::post('finance/payment/get-class-students', 'PaymentController@getClassStudents')->name('finance.get_class_students');
+    Route::post('finance/payment/record-bulk', 'PaymentController@recordBulkPayments')->name('finance.record_bulk_payments');
 
     Route::any('finance/expense', 'ExpenseController@index')->name('finance.expense.index');
     Route::post('finance/expense', 'ExpenseController@index')->name('finance.expense.destroy');
