@@ -85,10 +85,11 @@
             </div>
         </div>
     </section>
+
+    @include('backend.finance.payment.bulk-record-modal')
 @endsection
 
 @section('extraScript')
     <script type="text/javascript">$(document).ready(function () { Generic.initCommonPageJS(); });</script>
+    @include('backend.finance.payment.bulk-record-modal-script')
 @endsection
-
-@include('backend.finance.payment.bulk-record-modal')

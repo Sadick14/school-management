@@ -46,6 +46,6 @@ class IClass extends Model
 
     public function subjects()
     {
-        return $this->hasMany('App\Subject', 'class_id');
+        return $this->belongsToMany('App\Subject', 'class_subjects', 'class_id', 'subject_id');
     }
 }

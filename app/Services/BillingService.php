@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\AcademicTerm;
+use App\FeedingCharge;
 use App\FeePayment;
 use App\FeeStructure;
 use App\FeeType;
 use App\Http\Helpers\AppHelper;
 use App\Registration;
+use App\StudentAttendance;
 use App\StudentLedger;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -139,7 +141,10 @@ class BillingService
     }
 
     /**
-     * Generate weekday feeding fees between two dates (Mon-Fri only).
+     * Generate weekday feeding charges between two dates (Mon-Fri only), accruing
+     * them onto a single per-registration "wallet" ledger row. A day only adds to
+     * the wallet if the student was fed (per attendance, defaulting to fed when
+     * no attendance record exists). Never charges for future dates.
      */
     public function generateFeedingFees($registrationId, $dateFrom, $dateTo)
     {
@@ -158,38 +163,74 @@ class BillingService
             return 0;
         }
 
+        $wallet = StudentLedger::where('registration_id', $registration->id)
+            ->where('fee_type_id', $feeType->id)
+            ->whereNull('term_id')
+            ->whereNull('billing_date')
+            ->first();
+
+        if (!$wallet) {
+            $wallet = $this->createLedgerEntry([
+                'registration_id' => $registration->id,
+                'student_id' => $registration->student_id,
+                'academic_year_id' => $registration->academic_year_id,
+                'fee_type_id' => $feeType->id,
+                'description' => $feeType->name,
+                'amount' => 0,
+                'source' => 'auto',
+            ]);
+        }
+
         $start = Carbon::parse($dateFrom)->startOfDay();
         $end = Carbon::parse($dateTo)->startOfDay();
-        $created = 0;
+        $today = Carbon::now()->startOfDay();
+
+        if ($end->gt($today)) {
+            $end = $today->copy();
+        }
+
+        $charged = 0;
 
         for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
             if ($date->isWeekend()) {
                 continue;
             }
 
-            $exists = StudentLedger::where('registration_id', $registration->id)
-                ->where('fee_type_id', $feeType->id)
-                ->whereDate('billing_date', $date->format('Y-m-d'))
-                ->count();
+            $dateStr = $date->format('Y-m-d');
+
+            $exists = FeedingCharge::where('registration_id', $registration->id)
+                ->whereDate('charge_date', $dateStr)
+                ->exists();
 
             if ($exists) {
                 continue;
             }
 
-            $this->createLedgerEntry([
+            $attendance = StudentAttendance::where('registration_id', $registration->id)
+                ->whereDate('attendance_date', $dateStr)
+                ->first();
+
+            $fed = $attendance ? ($attendance->present === AppHelper::ATTENDANCE_TYPE[1]) : true;
+            $amount = 0;
+
+            if ($fed) {
+                $wallet->amount = bcadd($wallet->amount, $structure->amount, 2);
+                $wallet->balance = bcsub($wallet->amount, $wallet->amount_paid, 2);
+                $wallet->save();
+
+                $amount = $structure->amount;
+                $charged++;
+            }
+
+            FeedingCharge::create([
                 'registration_id' => $registration->id,
-                'student_id' => $registration->student_id,
-                'academic_year_id' => $registration->academic_year_id,
-                'fee_type_id' => $feeType->id,
-                'billing_date' => $date->format('Y-m-d'),
-                'description' => $feeType->name . ' - ' . $date->format('d M Y'),
-                'amount' => $structure->amount,
-                'source' => 'auto',
+                'student_ledger_id' => $wallet->id,
+                'charge_date' => $dateStr,
+                'amount' => $amount,
             ]);
-            $created++;
         }
 
-        return $created;
+        return $charged;
     }
 
     /**
@@ -297,13 +338,14 @@ class BillingService
         $feedingFrom = $feedingFrom ?: Carbon::now()->startOfMonth()->format('Y-m-d');
         $feedingTo = $feedingTo ?: Carbon::now()->format('Y-m-d');
 
-        foreach ($registrations as $registration) {
-            $terms = AcademicTerm::where('academic_year_id', $registration->academic_year_id)
-                ->where('status', AppHelper::ACTIVE)
-                ->get();
+        $activeTerm = null;
+        $feedingFeeTypeId = FeeType::where('code', 'FEEDING')->value('id');
 
-            foreach ($terms as $term) {
-                $this->generateTermFees($registration->academic_year_id, $term->id, $registration->class_id);
+        foreach ($registrations as $registration) {
+            $activeTerm = AppHelper::getActiveTerm($registration->academic_year_id);
+
+            if ($activeTerm) {
+                $this->generateTermFees($registration->academic_year_id, $activeTerm->id, $registration->class_id);
             }
 
             $this->generateRegistrationFee($registration->id);
@@ -313,7 +355,18 @@ class BillingService
         return StudentLedger::with(['feeType', 'term', 'registration.student', 'registration.class'])
             ->whereIn('registration_id', $registrationIds)
             ->where('status', AppHelper::ACTIVE)
-            ->where('balance', '!=', 0)
+            ->where(function ($q) use ($feedingFeeTypeId) {
+                $q->where('balance', '!=', 0)
+                    ->when($feedingFeeTypeId, function ($q2) use ($feedingFeeTypeId) {
+                        $q2->orWhere('fee_type_id', $feedingFeeTypeId);
+                    });
+            })
+            ->where(function ($q) use ($activeTerm) {
+                $q->whereNull('term_id')
+                    ->when($activeTerm, function ($q2) use ($activeTerm) {
+                        $q2->orWhere('term_id', $activeTerm->id);
+                    });
+            })
             ->orderBy('registration_id')
             ->orderBy('billing_date')
             ->get();
@@ -324,7 +377,9 @@ class BillingService
      */
     public function applyPayment(array $paymentData, array $items)
     {
-        return DB::transaction(function () use ($paymentData, $items) {
+        $feedingFeeTypeId = FeeType::where('code', 'FEEDING')->value('id');
+
+        return DB::transaction(function () use ($paymentData, $items, $feedingFeeTypeId) {
             $payment = FeePayment::create(array_merge($paymentData, [
                 'receipt_no' => $this->generateReceiptNo(),
             ]));
@@ -337,12 +392,19 @@ class BillingService
                     continue;
                 }
 
-                if ($ledger->balance > 0 && $amountApplied > $ledger->balance) {
-                    throw new \RuntimeException('Payment exceeds balance for ' . ($ledger->description ?: 'ledger item'));
-                }
+                $isFeedingWallet = $feedingFeeTypeId
+                    && $ledger->fee_type_id == $feedingFeeTypeId
+                    && is_null($ledger->term_id)
+                    && is_null($ledger->billing_date);
 
-                if ($ledger->balance < 0 && $amountApplied > abs($ledger->balance)) {
-                    throw new \RuntimeException('Credit application exceeds available credit.');
+                if (!$isFeedingWallet) {
+                    if ($ledger->balance > 0 && $amountApplied > $ledger->balance) {
+                        throw new \RuntimeException('Payment exceeds balance for ' . ($ledger->description ?: 'ledger item'));
+                    }
+
+                    if ($ledger->balance < 0 && $amountApplied > abs($ledger->balance)) {
+                        throw new \RuntimeException('Credit application exceeds available credit.');
+                    }
                 }
 
                 $ledger->amount_paid = bcadd($ledger->amount_paid, $amountApplied, 2);

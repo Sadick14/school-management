@@ -197,7 +197,9 @@ class PublicController extends Controller
         }
         else {
             $totalSubjects = Subject::where('status', AppHelper::ACTIVE)
-                ->where('class_id', $classId)->count();
+                ->whereHas('classes', function ($q) use ($classId) {
+                    $q->where('i_classes.id', $classId);
+                })->count();
         }
 
         $data = [];

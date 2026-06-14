@@ -24,7 +24,6 @@ class Subject extends Model
         'name',
         'code',
         'type',
-        'class_id',
         'status',
         'order',
         'exclude_in_result'
@@ -36,9 +35,9 @@ class Subject extends Model
         return $this->belongsToMany('App\Employee','teacher_subjects', 'subject_id', 'teacher_id')
             ->select('employees.id','employees.name');
     }
-    public function class()
+    public function classes()
     {
-        return $this->belongsTo('App\IClass', 'class_id');
+        return $this->belongsToMany('App\IClass', 'class_subjects', 'subject_id', 'class_id');
     }
 
     public function marks()
@@ -54,7 +53,9 @@ class Subject extends Model
     public function scopeIclass($query, $classId)
     {
         if($classId){
-            return $query->where('class_id', $classId);
+            return $query->whereHas('classes', function ($q) use ($classId) {
+                $q->where('i_classes.id', $classId);
+            });
         }
 
         return $query;

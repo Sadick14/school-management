@@ -55,11 +55,13 @@ class StudentAttendanceController extends Controller
 
         //now fetch attendance data
         $attendances = [];
-        if ($class_id && $section_id && $acYear && strlen($attendance_date) >= 10) {
+        if ($class_id && $acYear && strlen($attendance_date) >= 10) {
             $att_date = Carbon::createFromFormat('d/m/Y', $attendance_date)->toDateString();
             $attendances = Registration::where('academic_year_id', $acYear)
                 ->where('class_id', $class_id)
-                ->where('section_id', $section_id)
+                ->when($section_id, function ($query) use ($section_id) {
+                    $query->where('section_id', $section_id);
+                })
                 ->where('status', AppHelper::ACTIVE)
                 ->with(['student' => function ($query) {
                     $query->select('name', 'id');
@@ -104,7 +106,9 @@ class StudentAttendanceController extends Controller
         $att_date = Carbon::createFromFormat('d/m/Y', $attendance_date)->toDateString();
         return $attendances = Registration::where('academic_year_id', $acYear)
             ->where('class_id', $class_id)
-            ->where('section_id', $section_id)
+            ->when($section_id, function ($query) use ($section_id) {
+                $query->where('section_id', $section_id);
+            })
             ->where('status', AppHelper::ACTIVE)
             ->with(['student' => function ($query) {
                 $query->select('name', 'id');
@@ -159,7 +163,9 @@ class StudentAttendanceController extends Controller
                 $query->select('name', 'id');
             }])->where('academic_year_id', $acYear)
                 ->where('class_id', $class_id)
-                ->where('section_id', $section_id)
+                ->when($section_id, function ($query) use ($section_id) {
+                    $query->where('section_id', $section_id);
+                })
                 ->select('regi_no', 'roll_no', 'id', 'student_id')
                 ->orderBy('roll_no', 'asc')
                 ->get();
@@ -169,11 +175,14 @@ class StudentAttendanceController extends Controller
                 ->where('id', $class_id)
                 ->first();
             $class_name = $classInfo->name;
-            $sectionsInfo = Section::where('status', AppHelper::ACTIVE)
-                ->where('id', $section_id)
-                ->where('class_id', $class_id)
-                ->first();
-            $section_name = $sectionsInfo->name;
+            $section_name = 'All Sections';
+            if ($section_id) {
+                $sectionsInfo = Section::where('status', AppHelper::ACTIVE)
+                    ->where('id', $section_id)
+                    ->where('class_id', $class_id)
+                    ->first();
+                $section_name = $sectionsInfo ? $sectionsInfo->name : 'All Sections';
+            }
 
 
             if (AppHelper::getInstituteCategory() == 'college') {
@@ -229,11 +238,11 @@ class StudentAttendanceController extends Controller
     {
         //validate form
         $messages = [
-            'registrationIds.required' => 'This section has no students!'
+            'registrationIds.required' => 'No students found for this selection!'
         ];
         $rules = [
             'class_id' => 'required|integer',
-            'section_id' => 'required|integer',
+            'section_id' => 'nullable|integer',
             'attendance_date' => 'required|min:10|max:11',
             'registrationIds' => 'required|array'
 
@@ -300,8 +309,13 @@ class StudentAttendanceController extends Controller
 
         foreach ($students as $student) {
 
-            $inTime = $shiftRuningTimes[$studentsShift[$student]]['start'];
-            $outTime = $shiftRuningTimes[$studentsShift[$student]]['end'];
+            $shift = $studentsShift[$student] ?? null;
+            if (!$shift || !isset($shiftRuningTimes[$shift])) {
+                $shift = array_key_first($shiftRuningTimes);
+            }
+
+            $inTime = $shiftRuningTimes[$shift]['start'];
+            $outTime = $shiftRuningTimes[$shift]['end'];
             $timeDiff  = $inTime->diff($outTime)->format('%H:%I');
 
             $isPresent = '1';

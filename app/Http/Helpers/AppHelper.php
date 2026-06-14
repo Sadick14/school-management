@@ -796,7 +796,7 @@ class AppHelper
 
         try {
 
-            $users = User::rightJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
+            $users = User::join('user_roles', 'users.id', '=', 'user_roles.user_id')
                 ->where('user_roles.role_id', $groupId)
                 ->select('users.id')
                 ->get();

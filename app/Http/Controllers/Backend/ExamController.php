@@ -10,6 +10,7 @@ use App\Http\Helpers\AppHelper;
 use App\IClass;
 use App\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ExamController extends Controller
 {
@@ -179,15 +180,24 @@ class ExamController extends Controller
 
         $gradeId = AppHelper::getAppSettings('result_default_grade_id') ?: Grade::min('id');
 
-        $subjects = Subject::where('status', AppHelper::ACTIVE)
-            ->whereIn('class_id', $classIds)
-            ->get(['id', 'class_id']);
+        $pairs = DB::table('class_subjects')
+            ->join('subjects', 'subjects.id', '=', 'class_subjects.subject_id')
+            ->whereIn('class_subjects.class_id', $classIds)
+            ->where('subjects.status', AppHelper::ACTIVE)
+            ->orderBy('class_subjects.class_id')
+            ->get(['class_subjects.class_id', 'class_subjects.subject_id']);
 
-        foreach ($subjects as $subject) {
+        $seenSubjects = [];
+        foreach ($pairs as $pair) {
+            if(isset($seenSubjects[$pair->subject_id])){
+                continue;
+            }
+            $seenSubjects[$pair->subject_id] = true;
+
             ExamRule::firstOrCreate(
-                ['exam_id' => $exam->id, 'subject_id' => $subject->id],
+                ['exam_id' => $exam->id, 'subject_id' => $pair->subject_id],
                 [
-                    'class_id' => $subject->class_id,
+                    'class_id' => $pair->class_id,
                     'grade_id' => $gradeId,
                     'ca_total_marks' => 100,
                     'exam_total_marks' => 100,
@@ -582,7 +592,9 @@ class ExamController extends Controller
         $exam_id = $rule->exam_id;
         $grade_id = $rule->grade_id;
 
-        $subjects = Subject::where('class_id', $rule->class_id)
+        $subjects = Subject::whereHas('classes', function ($q) use ($rule) {
+                $q->where('i_classes.id', $rule->class_id);
+            })
             ->where('status', AppHelper::ACTIVE)
             ->orderBy('order','asc')
             ->pluck('name', 'id');

@@ -258,7 +258,7 @@ export default class Academic {
 
         }
     }
-    static getSection(class_id) {
+    static getSection(class_id, sectionOptional = false) {
         let getUrl = window.section_list_url + "?class=" + class_id;
         if (class_id) {
             Generic.loaderStart();
@@ -268,8 +268,10 @@ export default class Academic {
                         $('select[name="section_id"]').empty().prepend('<option selected=""></option>').select2({ allowClear: true, placeholder: 'Pick a section...', data: response.data });
                     }
                     else {
-                        $('select[name="section_id"]').empty().select2({ placeholder: 'Pick a section...' });
-                        toastr.error('This class have no section!');
+                        $('select[name="section_id"]').empty().select2({ placeholder: sectionOptional ? 'All sections...' : 'Pick a section...' });
+                        if (!sectionOptional) {
+                            toastr.error('This class have no section!');
+                        }
                     }
                     Generic.loaderStop();
                 }).catch((error) => {
@@ -344,7 +346,7 @@ export default class Academic {
 
         $('select[name="class_id"]').on('change', function () {
             let class_id = $(this).val();
-            Academic.getSection(class_id);
+            Academic.getSection(class_id, true);
         });
         $('select[name="section_id"]').on('change', function () {
             $('#attendance_list_filter').trigger('dp.change');
@@ -352,12 +354,12 @@ export default class Academic {
         $('#attendance_list_filter').on('dp.change', function (event) {
             let atDate = $(this).val();
             let classId = $('select[name="class_id"]').val();
-            let sectionId = $('select[name="section_id"]').val();
+            let sectionId = $('select[name="section_id"]').val() || '';
             let acYearId = $('select[name="academic_year"]').val();
 
-            //check year, class, section and date is fill up then procced
-            if (!atDate || !classId || !sectionId) {
-                toastr.warning('Fill up class, section and date first!');
+            //check year, class and date is fill up then procced
+            if (!atDate || !classId) {
+                toastr.warning('Fill up class and date first!');
                 return false;
             }
             if (institute_category == "college" && !acYearId) {
@@ -396,11 +398,10 @@ export default class Academic {
 
         $('#section_id_filter').on('change', function () {
             //hide button
-            let sectionId = $(this).val();
             let classId = $('select[name="class_id"]').val();
             let acYearId = $('select[name="academic_year"]').val();
             //validate input
-            if (!classId || !sectionId) {
+            if (!classId) {
                 return false;
             }
             //check year then procced
@@ -469,7 +470,7 @@ export default class Academic {
     static checkAttendanceExists(cb = {}) {
         let atDate = $('input[name="attendance_date"]').val();
         let classId = $('select[name="class_id"]').val();
-        let sectionId = $('select[name="section_id"]').val();
+        let sectionId = $('select[name="section_id"]').val() || '';
         let acYearId = $('select[name="academic_year"]').val();
         let queryString = "?class=" + classId + "&section=" + sectionId + "&attendance_date=" + atDate;
 

@@ -41,7 +41,7 @@
                         </div>
                         <div class="col-md-2">
                             <div class="form-group has-feedback">
-                                {!! Form::select('section_id', $sections, $section_id , ['placeholder' => 'Pick a section...','class' => 'form-control select2', 'required' => 'true']) !!}
+                                {!! Form::select('section_id', $sections, $section_id , ['placeholder' => 'All sections...','class' => 'form-control select2']) !!}
                             </div>
                         </div>
                         <div class="col-md-2">

@@ -6,7 +6,10 @@ export default class Finance {
             registration: null,
             duesData: null,
             optionalFees: [],
-            selectedAmounts: {},
+            feeGroups: [],
+            activeTerm: null,
+            paymentMethod: null,
+            currentStep: 1,
         };
 
         let searchTimer = null;
@@ -17,7 +20,14 @@ export default class Finance {
                 $('#searchResults').hide().empty();
                 return;
             }
-            searchTimer = setTimeout(() => Finance.searchStudents(term), 300);
+            searchTimer = setTimeout(() => Finance.searchStudents(term, $('#filterClass').val()), 300);
+        });
+
+        $('#filterClass').on('change', function () {
+            const term = $('#studentSearch').val().trim();
+            if (term.length >= 1) {
+                Finance.searchStudents(term, $(this).val());
+            }
         });
 
         $(document).on('click', function (e) {
@@ -28,28 +38,41 @@ export default class Finance {
 
         $('#changeStudentBtn').on('click', Finance.resetStudent);
 
-        $('#feeCards').on('click', '.fee-card', function () {
-            Finance.toggleFeeCard($(this));
-        });
-
-        $('#feeCards').on('input', '.pay-amount', function (e) {
-            e.stopPropagation();
-            const ledgerId = $(this).closest('.fee-card').data('ledger');
-            Finance.quickPayState.selectedAmounts[ledgerId] = parseFloat($(this).val()) || 0;
-            Finance.updateTotal();
-        });
-
-        $('#feeCards').on('click', '.pay-amount', function (e) {
-            e.stopPropagation();
-        });
-
         $('#recalcBtn').on('click', Finance.loadDues);
+
+        $('#feeRowsBody').on('input', '.pay-now-input', Finance.updateTotal);
+
+        $('#toStep2Btn').on('click', function () {
+            Finance.goToStep(2);
+        });
+
+        $('#backToStep1Btn').on('click', function () {
+            Finance.goToStep(1);
+        });
+
+        $('#toStep3Btn').on('click', function () {
+            Finance.renderReview();
+            Finance.goToStep(3);
+        });
+
+        $('#backToStep2Btn').on('click', function () {
+            Finance.goToStep(2);
+        });
+
+        $('#paymentMethodButtons').on('click', '.payment-method-btn', function () {
+            $('#paymentMethodButtons .payment-method-btn').removeClass('selected');
+            $(this).addClass('selected');
+            Finance.quickPayState.paymentMethod = $(this).data('method');
+            Finance.renderReview();
+        });
+
+        $('#payment_date').on('change', Finance.renderReview);
 
         $('#collectPaymentBtn').on('click', Finance.confirmAndSubmit);
     }
 
-    static searchStudents(term) {
-        axios.get(window.finance_search_students_url, { params: { q: term } })
+    static searchStudents(term, classId) {
+        axios.get(window.finance_search_students_url, { params: { q: term, class_id: classId || null } })
             .then((response) => {
                 const $results = $('#searchResults');
                 $results.empty();
@@ -78,15 +101,16 @@ export default class Finance {
 
     static selectStudent(student) {
         Finance.quickPayState.registration = student;
-        Finance.quickPayState.selectedAmounts = {};
         Finance.quickPayState.optionalFees = [];
+        Finance.quickPayState.feeGroups = [];
 
         $('#searchResults').hide().empty();
         $('#studentSearch').val(student.name);
 
         $('#selStudentName').text(student.name);
         $('#selStudentMeta').text([student.regi_no, student.class, student.section].filter(Boolean).join(' · '));
-        $('#studentPanel').show();
+        $('#selectedStudentCard').show();
+        $('#toStep2Btn').prop('disabled', false);
 
         Finance.loadDues();
     }
@@ -94,12 +118,22 @@ export default class Finance {
     static resetStudent() {
         Finance.quickPayState.registration = null;
         Finance.quickPayState.duesData = null;
-        Finance.quickPayState.selectedAmounts = {};
         Finance.quickPayState.optionalFees = [];
+        Finance.quickPayState.feeGroups = [];
+        Finance.quickPayState.activeTerm = null;
+        Finance.quickPayState.paymentMethod = null;
+
         $('#studentSearch').val('').trigger('focus');
-        $('#studentPanel').hide();
-        $('#feeCards').empty();
+        $('#selectedStudentCard').hide();
+        $('#termSummaryWrap').hide();
+        $('#toStep2Btn').prop('disabled', true);
+        $('#feeRowsBody').empty();
         $('#optionalFeesContainer').empty();
+        $('#noDues').hide();
+        $('#creditNote').hide();
+        $('#paymentMethodButtons .payment-method-btn').removeClass('selected');
+
+        Finance.goToStep(1);
     }
 
     static loadDues() {
@@ -116,10 +150,18 @@ export default class Finance {
             feeding_to: Finance.formatDateForServer($('#feeding_to').val()),
             optional_fees: optionalFees,
         }).then((response) => {
-            const studentData = response.data.students[0] || { items: [], total_due: 0, total_credit: 0 };
+            const studentData = response.data.students[0] || { items: [], total_due: 0, total_credit: 0, total_expected: 0, total_paid: 0 };
             Finance.quickPayState.duesData = studentData;
+            Finance.quickPayState.activeTerm = response.data.active_term;
+
+            $('#activeTermBadge').text('Active Term: ' + (response.data.active_term || 'N/A'));
+            $('#sumExpected').text(parseFloat(studentData.total_expected || 0).toFixed(2));
+            $('#sumPaid').text(parseFloat(studentData.total_paid || 0).toFixed(2));
+            $('#sumOutstanding').text(parseFloat(studentData.total_due || 0).toFixed(2));
+            $('#termSummaryWrap').show();
+
             Finance.renderOptionalFees(response.data.optional_fees);
-            Finance.renderFeeCards(studentData);
+            Finance.renderFeeTable(studentData);
         }).catch((error) => {
             const msg = error.response && error.response.data && error.response.data.message
                 ? error.response.data.message
@@ -146,41 +188,58 @@ export default class Finance {
         });
     }
 
-    static renderFeeCards(student) {
-        const $container = $('#feeCards');
-        $container.empty();
-        Finance.quickPayState.selectedAmounts = {};
+    static renderFeeTable(student) {
+        const $body = $('#feeRowsBody');
+        $body.empty();
 
-        const dueItems = student.items.filter((item) => item.balance > 0);
-        const creditItems = student.items.filter((item) => item.balance < 0);
+        const groups = {};
+        const order = [];
 
-        if (!dueItems.length) {
-            $('#noDues').show();
-        } else {
-            $('#noDues').hide();
-        }
-
-        dueItems.forEach((item) => {
-            Finance.quickPayState.selectedAmounts[item.ledger_id] = item.balance;
-
-            const period = item.description || item.term || '';
-            const $card = $(`
-                <div class="fee-card selected" data-ledger="${item.ledger_id}" data-balance="${item.balance}">
-                    <i class="fa fa-check-circle"></i>
-                    <div class="fee-name">${item.fee_type}</div>
-                    <div class="fee-desc">${period}</div>
-                    <div class="fee-balance">GHS ${parseFloat(item.balance).toFixed(2)}</div>
-                    <div class="fee-amount-row">
-                        <input type="number" step="0.01" min="0" max="${item.balance}" class="form-control input-sm pay-amount" value="${parseFloat(item.balance).toFixed(2)}">
-                    </div>
-                </div>
-            `);
-            $container.append($card);
+        (student.items || []).forEach((item) => {
+            const key = item.fee_type || 'Other';
+            if (!groups[key]) {
+                groups[key] = {
+                    feeType: key,
+                    isFeeding: item.fee_type_code === 'FEEDING',
+                    expected: 0,
+                    paid: 0,
+                    balance: 0,
+                    ledgers: [],
+                };
+                order.push(key);
+            }
+            groups[key].expected += parseFloat(item.amount) || 0;
+            groups[key].paid += parseFloat(item.amount_paid) || 0;
+            groups[key].balance += parseFloat(item.balance) || 0;
+            groups[key].ledgers.push({ ledger_id: item.ledger_id, balance: parseFloat(item.balance) || 0 });
         });
 
-        if (creditItems.length) {
-            const totalCredit = student.total_credit || 0;
-            $('#creditNote').show().text(`Student has a credit balance of GHS ${totalCredit.toFixed(2)} available.`);
+        const feeGroups = order.map((key) => groups[key]);
+        Finance.quickPayState.feeGroups = feeGroups;
+
+        const hasDues = feeGroups.some((g) => g.balance > 0);
+        $('#noDues').toggle(!hasDues);
+
+        feeGroups.forEach((group, index) => {
+            const payNow = group.balance > 0 ? group.balance : 0;
+            const maxAttr = group.isFeeding ? '' : `max="${Math.max(group.balance, 0).toFixed(2)}"`;
+            const $row = $(`
+                <tr data-group-index="${index}">
+                    <td>${group.feeType}</td>
+                    <td>${group.expected.toFixed(2)}</td>
+                    <td>${group.paid.toFixed(2)}</td>
+                    <td>${group.balance.toFixed(2)}</td>
+                    <td>
+                        <input type="number" step="0.01" min="0" ${maxAttr}
+                            class="form-control input-sm pay-now-input" value="${payNow.toFixed(2)}">
+                    </td>
+                </tr>
+            `);
+            $body.append($row);
+        });
+
+        if (student.total_credit > 0) {
+            $('#creditNote').show().text(`Student has a credit balance of GHS ${parseFloat(student.total_credit).toFixed(2)} available.`);
         } else {
             $('#creditNote').hide();
         }
@@ -188,36 +247,60 @@ export default class Finance {
         Finance.updateTotal();
     }
 
-    static toggleFeeCard($card) {
-        const ledgerId = $card.data('ledger');
-        const balance = parseFloat($card.data('balance'));
-
-        if ($card.hasClass('selected')) {
-            $card.removeClass('selected');
-            delete Finance.quickPayState.selectedAmounts[ledgerId];
-        } else {
-            $card.addClass('selected');
-            $card.find('.pay-amount').val(balance.toFixed(2));
-            Finance.quickPayState.selectedAmounts[ledgerId] = balance;
-        }
-
-        Finance.updateTotal();
-    }
-
     static updateTotal() {
-        const total = Object.values(Finance.quickPayState.selectedAmounts)
-            .reduce((sum, amount) => sum + (parseFloat(amount) || 0), 0);
+        let total = 0;
+        $('#feeRowsBody .pay-now-input').each(function () {
+            total += parseFloat($(this).val()) || 0;
+        });
 
         $('#totalAmount').text(total.toFixed(2));
-        $('#collectPaymentBtn').prop('disabled', total <= 0);
+        $('#toStep3Btn').prop('disabled', total <= 0);
+    }
+
+    static goToStep(step) {
+        Finance.quickPayState.currentStep = step;
+
+        $('.step-panel').removeClass('active');
+        $(`.step-panel[data-step="${step}"]`).addClass('active');
+
+        $('.payment-step').each(function () {
+            const stepNum = parseInt($(this).data('step'), 10);
+            $(this).removeClass('active done');
+            if (stepNum < step) {
+                $(this).addClass('done');
+            } else if (stepNum === step) {
+                $(this).addClass('active');
+            }
+        });
+    }
+
+    static renderReview() {
+        const state = Finance.quickPayState;
+
+        $('#reviewStudent').text(state.registration ? state.registration.name : '');
+        $('#reviewTerm').text(state.activeTerm || 'N/A');
+        $('#reviewMethod').text(state.paymentMethod
+            ? $(`.payment-method-btn[data-method="${state.paymentMethod}"]`).text().trim()
+            : '-');
+        $('#reviewDate').text($('#payment_date').val());
+        $('#reviewTotal').text($('#totalAmount').text());
     }
 
     static confirmAndSubmit() {
         const state = Finance.quickPayState;
-        const total = Object.values(state.selectedAmounts).reduce((sum, a) => sum + (parseFloat(a) || 0), 0);
+
+        if (!state.paymentMethod) {
+            swal('Select Method', 'Please select a payment method.', 'warning');
+            return;
+        }
+
+        let total = 0;
+        $('#feeRowsBody .pay-now-input').each(function () {
+            total += parseFloat($(this).val()) || 0;
+        });
 
         if (total <= 0) {
-            swal('No Payment', 'Select at least one fee to pay.', 'warning');
+            swal('No Payment', 'Enter an amount to pay.', 'warning');
             return;
         }
 
@@ -236,16 +319,46 @@ export default class Finance {
 
     static submitPayment() {
         const state = Finance.quickPayState;
-        const items = Object.keys(state.selectedAmounts)
-            .map((ledgerId) => ({ ledger_id: parseInt(ledgerId, 10), amount: parseFloat(state.selectedAmounts[ledgerId]) }))
-            .filter((item) => item.amount > 0);
+        const items = [];
+
+        $('#feeRowsBody tr').each(function () {
+            const group = state.feeGroups[parseInt($(this).data('group-index'), 10)];
+            let payNow = parseFloat($(this).find('.pay-now-input').val()) || 0;
+
+            if (payNow <= 0 || !group) {
+                return;
+            }
+
+            if (group.isFeeding) {
+                const ledger = group.ledgers[0];
+                if (ledger) {
+                    items.push({ ledger_id: ledger.ledger_id, amount: payNow });
+                }
+                return;
+            }
+
+            group.ledgers.forEach((ledger) => {
+                if (payNow <= 0 || ledger.balance <= 0) {
+                    return;
+                }
+
+                const amountApplied = Math.min(payNow, ledger.balance);
+                items.push({ ledger_id: ledger.ledger_id, amount: amountApplied });
+                payNow -= amountApplied;
+            });
+        });
+
+        if (!items.length) {
+            swal('No Payment', 'Enter an amount to pay.', 'warning');
+            return;
+        }
 
         axios.post(window.finance_store_url, {
             academic_year_id: state.registration.academic_year_id,
             registration_id: state.registration.id,
             student_id: state.registration.student_id,
             payment_date: $('#payment_date').val(),
-            payment_method: $('#payment_method').val(),
+            payment_method: state.paymentMethod,
             paid_by: $('#paid_by').val(),
             items: items,
         }).then((response) => {

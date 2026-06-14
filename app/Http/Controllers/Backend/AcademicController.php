@@ -97,9 +97,7 @@ class AcademicController extends Controller
             );
 
             //assign selected subjects to this class
-            if(!empty($subjectIds)){
-                Subject::whereIn('id', $subjectIds)->update(['class_id' => $iclass->id]);
-            }
+            $iclass->subjects()->sync($subjectIds);
 
             if(!$id){
                 //now notify the admins about this record
@@ -130,11 +128,12 @@ class AcademicController extends Controller
             $selectedSubjects = $iclass->subjects->pluck('id')->toArray();
         }
 
-        $allSubjects = Subject::with('class')->orderBy('name', 'asc')->get()
+        $allSubjects = Subject::with('classes')->orderBy('name', 'asc')->get()
             ->mapWithKeys(function ($subject) use ($id) {
                 $label = $subject->name.' ('.$subject->code.')';
-                if($subject->class_id && $subject->class_id != $id && $subject->class){
-                    $label .= ' - '.$subject->class->name;
+                $otherClasses = $subject->classes->where('id', '!=', $id)->pluck('name');
+                if($otherClasses->count()){
+                    $label .= ' - '.$otherClasses->implode(', ');
                 }
 
                 return [$subject->id => $label];
@@ -350,7 +349,9 @@ class AcademicController extends Controller
                 }
                 $teacherId = auth()->user()->teacher->id;
                 $subjects = Subject::select('subjects.id', 'subjects.name as text')
-                    ->where('class_id',$class_id)
+                    ->whereHas('classes', function ($q) use ($class_id) {
+                        $q->where('i_classes.id', $class_id);
+                    })
                     ->sType($subjectType)
                     ->join('teacher_subjects','teacher_subjects.subject_id','subjects.id')
                     ->where('teacher_subjects.teacher_id', $teacherId)
@@ -360,7 +361,9 @@ class AcademicController extends Controller
             }
             else {
                 $subjects = Subject::select('id', 'name as text')
-                    ->where('class_id', $class_id)
+                    ->whereHas('classes', function ($q) use ($class_id) {
+                        $q->where('i_classes.id', $class_id);
+                    })
                     ->sType($subjectType)
                     ->where('status', AppHelper::ACTIVE)
                     ->orderBy('order', 'asc')
@@ -372,9 +375,7 @@ class AcademicController extends Controller
 
         $class_id = $request->query->get('class',0);
         $subjects = Subject::iclass($class_id)->with('teachers')
-            ->with(['class' => function($q){
-                $q->select('id','name');
-            }])
+            ->with('classes')
             ->orderBy('order', 'asc')
             ->get();
         $classes = IClass::where('status', AppHelper::ACTIVE)
@@ -414,7 +415,6 @@ class AcademicController extends Controller
 
                 //auto-generate order sequence for new subjects
                 if(!$id){
-                    $data['class_id'] = IClass::orderBy('order', 'asc')->value('id');
                     $data['order'] = Subject::max('order') + 1;
                     $data['type'] = 1;
                 }

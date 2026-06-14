@@ -65,7 +65,7 @@
                                     <td>{{ $subject->name }}</td>
                                     <td>{{ $subject->code }}</td>
                                     <td>{{ $subject->type }}</td>
-                                    <td>{{ $subject->class->name }}</td>
+                                    <td>{{ $subject->classes->pluck('name')->implode(', ') }}</td>
                                     <td class="text-capitalize">
                                         {{ implode(',', $subject->teachers->pluck('name')->toArray()) }}
                                     </td>

@@ -191,13 +191,11 @@ class TeacherController extends Controller
             ->orderBy('name','asc')
             ->get();
         
-        $subjects = Subject::with(['class' => function($query){
-                $query->select('name','id');
-            }])
-            ->join('teacher_subjects','teacher_subjects.subject_id','subjects.id')
+        $subjects = Subject::with('classes')
+            ->join('teacher_subjects', 'teacher_subjects.subject_id', 'subjects.id')
             ->where('teacher_subjects.teacher_id', $teacher->id)
-            ->select('subjects.name','subjects.class_id','subjects.code')
-            ->orderBy('subjects.class_id','asc')
+            ->select('subjects.id', 'subjects.name', 'subjects.code')
+            ->orderBy('subjects.name', 'asc')
             ->get();
 
 

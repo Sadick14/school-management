@@ -157,7 +157,7 @@ class AdministratorController extends Controller
     public function userIndex()
     {
 
-        $users = User::rightJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
+        $users = User::join('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->leftJoin('roles', 'user_roles.role_id', '=', 'roles.id')
             ->where('user_roles.role_id', '=', AppHelper::USER_ADMIN)
             ->where('users.is_super_admin', false)
@@ -239,7 +239,7 @@ class AdministratorController extends Controller
     public function useredit($id)
     {
 
-        $user = User::rightJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
+        $user = User::join('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->where('user_roles.role_id', '=', AppHelper::USER_ADMIN)
             ->where('users.id', $id)
             ->where('users.is_super_admin', false)
@@ -265,7 +265,7 @@ class AdministratorController extends Controller
      */
     public function userUpdate(Request $request, $id)
     {
-        $user = User::rightJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
+        $user = User::join('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->where('user_roles.role_id', '=', AppHelper::USER_ADMIN)
             ->where('users.id', $id)
             ->where('users.is_super_admin', false)

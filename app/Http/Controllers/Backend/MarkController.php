@@ -140,7 +140,9 @@ class MarkController extends Controller
                 ->pluck('name', 'id');
 
             $subjectsQuery = Subject::where('status', AppHelper::ACTIVE)
-                ->where('class_id', $class_id);
+                ->whereHas('classes', function ($q) use ($class_id) {
+                    $q->where('i_classes.id', $class_id);
+                });
             if($teacherId){
                 $subjectsQuery->join('teacher_subjects','teacher_subjects.subject_id','subjects.id')
                     ->where('teacher_subjects.teacher_id', $teacherId);
@@ -287,7 +289,9 @@ class MarkController extends Controller
                 ->pluck('name', 'id');
 
             $subjects = Subject::where('status', AppHelper::ACTIVE)
-                ->where('class_id', $class_id)
+                ->whereHas('classes', function ($q) use ($class_id) {
+                    $q->where('i_classes.id', $class_id);
+                })
                 ->when($teacherId, function ($query) use($teacherId){
                     $query->where('teacher_id', $teacherId);
                 })
@@ -367,7 +371,9 @@ class MarkController extends Controller
             $exam_id = $request->get('exam_id', 0);
 
             $subjects = Subject::where('status', AppHelper::ACTIVE)
-                ->where('class_id', $class_id)
+                ->whereHas('classes', function ($q) use ($class_id) {
+                    $q->where('i_classes.id', $class_id);
+                })
                 ->orderBy('order','asc')
                 ->select('id','name')
                 ->get();
@@ -566,12 +572,11 @@ class MarkController extends Controller
         }
 
         $sectionInfo = $section_id ? Section::where('id', $section_id)->first() : null;
-        $subjectInfo = Subject::with(['class' => function($query){
-            $query->select('name','id');
-        }])->where('id', $subject_id)->first();
+        $subjectInfo = Subject::where('id', $subject_id)->first();
+        $classInfo = IClass::where('id', $class_id)->first();
         //now notify the admins about this record
         $sectionMsgPart = $sectionInfo ? "section {$sectionInfo->name}, " : '';
-        $msg = "Class {$subjectInfo->class->name}, {$sectionMsgPart}{$subjectInfo->name} subject marks added for {$examInfo->name} exam  by ".auth()->user()->name;
+        $msg = "Class {$classInfo->name}, {$sectionMsgPart}{$subjectInfo->name} subject marks added for {$examInfo->name} exam  by ".auth()->user()->name;
         $nothing = AppHelper::sendNotificationToAdmins('info', $msg);
         // Notification end
 
@@ -1343,7 +1348,9 @@ class MarkController extends Controller
 
         // pull subjects of promoting class[ core only]
         $subjects = Subject::select('id')
-            ->where('class_id', $promote_class_id)
+            ->whereHas('classes', function ($q) use ($promote_class_id) {
+                $q->where('i_classes.id', $promote_class_id);
+            })
             ->where('type', 1)
             ->where('status', AppHelper::ACTIVE)
             ->orderBy('order', 'asc')

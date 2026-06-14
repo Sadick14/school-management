@@ -336,7 +336,9 @@ class StudentController extends Controller
 
         //fetch core subject from db
         $subjects = Subject::select('id')
-            ->where('class_id', $data['class_id'])
+            ->whereHas('classes', function ($q) use ($data) {
+                $q->where('i_classes.id', $data['class_id']);
+            })
             ->where('type', 1) // 1 =core 2= elective , 3 = selective
             ->where('status', AppHelper::ACTIVE)
             ->orderBy('order', 'asc')
@@ -551,7 +553,9 @@ class StudentController extends Controller
 
 
         $coreSubjects = Subject::select('id', 'name')
-            ->where('class_id',$regiInfo->class_id)
+            ->whereHas('classes', function ($q) use ($regiInfo) {
+                $q->where('i_classes.id', $regiInfo->class_id);
+            })
             ->sType(1)
             ->where('status', AppHelper::ACTIVE)
             ->orderBy('name', 'asc')
@@ -560,7 +564,9 @@ class StudentController extends Controller
         //if college then show both subject in feild
         if($isCollege){
             $selectiveSubjects = Subject::select('id', 'name')
-                ->where('class_id',$regiInfo->class_id)
+                ->whereHas('classes', function ($q) use ($regiInfo) {
+                    $q->where('i_classes.id', $regiInfo->class_id);
+                })
                 ->sType([2,3])
                 ->where('status', AppHelper::ACTIVE)
                 ->orderBy('name', 'asc')
@@ -569,13 +575,17 @@ class StudentController extends Controller
         }
         else{
             $selectiveSubjects = Subject::select('id', 'name')
-                ->where('class_id',$regiInfo->class_id)
+                ->whereHas('classes', function ($q) use ($regiInfo) {
+                    $q->where('i_classes.id', $regiInfo->class_id);
+                })
                 ->sType(3)
                 ->where('status', AppHelper::ACTIVE)
                 ->orderBy('name', 'asc')
                 ->pluck('name', 'id');
             $electiveSubjects = Subject::select('id', 'name')
-                ->where('class_id',$regiInfo->class_id)
+                ->whereHas('classes', function ($q) use ($regiInfo) {
+                    $q->where('i_classes.id', $regiInfo->class_id);
+                })
                 ->sType(2)
                 ->where('status', AppHelper::ACTIVE)
                 ->orderBy('name', 'asc')
@@ -755,7 +765,9 @@ class StudentController extends Controller
         $oldSubjects = [];
         if($allowSubjectUpdate) {
             $subjects = Subject::select('id', 'type as sub_type')
-                ->where('class_id', $regiInfo->class_id)
+                ->whereHas('classes', function ($q) use ($regiInfo) {
+                    $q->where('i_classes.id', $regiInfo->class_id);
+                })
                 ->where('type', 1)// 1 =core 2= elective , 3 = selective
                 ->where('status', AppHelper::ACTIVE)
                 ->orderBy('order', 'asc')

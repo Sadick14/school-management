@@ -252,7 +252,7 @@
                                                         {{$subject->name}}[{{$subject->code}}]
                                                     </td>
                                                     <td class="text-center">
-                                                        {{$subject->class->name}}
+                                                        {{ $subject->classes->pluck('name')->implode(', ') }}
                                                     </td>
                                                 </tr>
                                             @endforeach

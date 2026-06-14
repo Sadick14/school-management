@@ -61,8 +61,8 @@
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group has-feedback">
-                                        <label for="section_id">Section<span class="text-danger">*</span></label>
-                                        {!! Form::select('section_id', [], null , ['placeholder' => 'Pick a section...','class' => 'form-control select2', 'id' => 'section_id_filter', 'required' => 'true']) !!}
+                                        <label for="section_id">Section</label>
+                                        {!! Form::select('section_id', [], null , ['placeholder' => 'All sections...','class' => 'form-control select2', 'id' => 'section_id_filter']) !!}
                                         <span class="form-control-feedback"></span>
                                         <span class="text-danger">{{ $errors->first('section_id') }}</span>
                                     </div>

@@ -93,6 +93,7 @@ class PaymentController extends Controller
     {
         $this->validate($request, [
             'q' => 'required|string|min:1|max:100',
+            'class_id' => 'nullable|integer',
         ]);
 
         $term = $request->get('q');
@@ -101,6 +102,9 @@ class PaymentController extends Controller
         $students = Registration::where('status', AppHelper::ACTIVE)
             ->when($academicYearId, function ($q) use ($academicYearId) {
                 $q->where('academic_year_id', $academicYearId);
+            })
+            ->when($request->get('class_id'), function ($q) use ($request) {
+                $q->where('class_id', $request->get('class_id'));
             })
             ->where(function ($q) use ($term) {
                 $q->where('regi_no', 'like', "%{$term}%")
@@ -158,6 +162,12 @@ class PaymentController extends Controller
 
         $optionalAvailable = $this->getOptionalFeesForRegistrations($registrationIds);
 
+        $registrations = Registration::whereIn('id', $registrationIds)->get();
+        $activeTerm = null;
+        if ($registrations->isNotEmpty()) {
+            $activeTerm = AppHelper::getActiveTerm($registrations->first()->academic_year_id);
+        }
+
         $grouped = $ledgers->groupBy('registration_id')->map(function ($items, $regId) {
             $registration = $items->first()->registration;
             return [
@@ -168,6 +178,7 @@ class PaymentController extends Controller
                     return [
                         'ledger_id' => $ledger->id,
                         'fee_type' => $ledger->feeType ? $ledger->feeType->name : '',
+                        'fee_type_code' => $ledger->feeType ? $ledger->feeType->code : null,
                         'description' => $ledger->description,
                         'term' => $ledger->term ? $ledger->term->name : '',
                         'billing_date' => $ledger->billing_date ? $ledger->billing_date->format('d/m/Y') : '',
@@ -177,6 +188,8 @@ class PaymentController extends Controller
                         'is_credit' => $ledger->balance < 0,
                     ];
                 })->values(),
+                'total_expected' => round($items->sum('amount'), 2),
+                'total_paid' => round($items->sum('amount_paid'), 2),
                 'total_due' => round($items->where('balance', '>', 0)->sum('balance'), 2),
                 'total_credit' => round(abs($items->where('balance', '<', 0)->sum('balance')), 2),
             ];
@@ -185,6 +198,7 @@ class PaymentController extends Controller
         return response()->json([
             'students' => $grouped,
             'optional_fees' => $optionalAvailable,
+            'active_term' => $activeTerm ? $activeTerm->name : null,
         ]);
     }
 
@@ -345,7 +359,6 @@ class PaymentController extends Controller
 
         $students = Registration::where('class_id', $classId)
             ->where('academic_year_id', $academicYearId)
-            ->where('status', AppHelper::ACTIVE)
             ->with('student')
             ->get(['id', 'student_id', 'regi_no'])
             ->map(function ($reg) {
