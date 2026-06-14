@@ -23,9 +23,6 @@ class IClass extends Model
         'order',
         'group',
         'duration',
-        'have_selective_subject',
-        'max_selective_subject',
-        'have_elective_subject',
         'is_open_for_admission',
         'status',
         'note'

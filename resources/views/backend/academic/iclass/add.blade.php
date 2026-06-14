@@ -79,24 +79,6 @@
                                         <span class="text-danger">{{ $errors->first('duration') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-group has-feedback">
-                                        <label for="have_selective_subject">Have Selective Subject?
-                                            <div class="checkbox icheck">
-                                                <input type="checkbox" name="have_selective_subject" class="have_selective_subject" @if($have_selective_subject) checked @endif>
-                                            </div>
-                                        </label>
-                                        <span class="text-danger">{{ $errors->first('have_selective_subject') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4" id="max_selective" @if(!$have_selective_subject) style="display: none;" @endif>
-                                    <div class="form-group has-feedback">
-                                        <label for="max_selective_subject">Max Selective Subject<span class="text-danger">*</span></label>
-                                        <input  type="number" class="form-control" name="max_selective_subject" placeholder="1,2,3,4" value="@if($iclass){{ $iclass->max_selective_subject }}@else{{ old('max_selective_subject') }}@endif" required>
-                                        <span class="fa fa-sort-numeric-asc form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('max_selective_subject') }}</span>
-                                    </div>
-                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
@@ -110,7 +92,7 @@
                             <div class="row">
                                 <div class="col-md-3 hide">
                                     <div class="form-group has-feedback">
-                                        <label for="have_selective_subject">Is Open for Admission?
+                                        <label for="is_open_for_admission">Is Open for Admission?
                                             <div class="checkbox icheck">
                                                 <input type="checkbox" name="is_open_for_admission" @if($is_open_for_admission) checked @endif>
                                             </div>
@@ -149,13 +131,6 @@
     <script type="text/javascript">
         $(document).ready(function () {
             Academic.iclassInit();
-            $('.have_selective_subject').on('ifChecked ifUnchecked', function(event) {
-                if (event.type == 'ifChecked') {
-                    $('#max_selective').show();
-                } else {
-                    $('#max_selective').hide();
-                }
-            });
         });
     </script>
 @endsection

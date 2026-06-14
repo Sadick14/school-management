@@ -1,30 +1,29 @@
-
-<!-- Left side column. contains the sidebar -->
 <aside class="main-sidebar">
     <section class="sidebar">
-        <div class="sidebar-logo-container hidden-xs" style="display: none;">
+        <div class="sidebar-logo-container hidden-xs">
             <div class="logo-circle">
                 @if(isset($appSettings['institute_settings']['short_name']))
                     {{ substr($appSettings['institute_settings']['short_name'], 0, 1) }}
                 @else
-                    E
+                    D
                 @endif
             </div>
             <span class="logo-text">
                 @if(isset($appSettings['institute_settings']['short_name']))
                     {{$appSettings['institute_settings']['short_name']}}
                 @else
-                    EduSuite
+                    DevSuite Edu
                 @endif
             </span>
         </div>
-        <!-- sidebar menu -->
+        
         <ul class="sidebar-menu" data-widget="tree">
             <li>
                 <a href="{{ URL::route('user.dashboard') }}">
                     <i class="fa fa-dashboard"></i> <span>Dashboard</span>
                 </a>
             </li>
+            
             @role('Student')
                 <li>
                     <a href="{{ URL::route('public.student_profile') }}">
@@ -32,6 +31,7 @@
                     </a>
                 </li>
             @endrole
+            
             @can('student.index')
                 <li>
                     <a href="{{ URL::route('student.index') }}">
@@ -39,6 +39,7 @@
                     </a>
                 </li>
             @endcan
+            
             @can('teacher.index')
                 <li>
                     <a href="{{ URL::route('teacher.index') }}">
@@ -46,14 +47,15 @@
                     </a>
                 </li>
             @endcan
+            
             @canany(['student_attendance.index', 'employee_attendance.index'])
             <li class="treeview">
                 <a href="#">
                     <i class="fa icon-attendance"></i>
                     <span>Attendance</span>
                     <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
+                        <i class="fa fa-angle-left pull-right"></i>
+                    </span>
                 </a>
                 <ul class="treeview-menu">
                     <li>
@@ -78,8 +80,8 @@
                     <i class="fa icon-academicmain"></i>
                     <span>Academic</span>
                     <span class="pull-right-container">
-              <i class="fa fa-angle-left pull-right"></i>
-            </span>
+                        <i class="fa fa-angle-left pull-right"></i>
+                    </span>
                 </a>
                 <ul class="treeview-menu">
                     @can('academic.class')
@@ -172,8 +174,7 @@
             </li>
             @endcan
 
-
-        @canany(['hrm.employee.index', 'hrm.leave.index', 'hrm.work_outside.index', 'hrm.policy'])
+            @canany(['hrm.employee.index', 'hrm.leave.index', 'hrm.work_outside.index', 'hrm.policy'])
             <li class="treeview">
                 <a href="#"><i class="fa fa-users"></i>
                     <span>HRM</span><span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
@@ -263,7 +264,6 @@
                                     <a href="{{route('report.employee_list')}}"><i class="fa icon-attendance"></i> <span>Employee List</span></a>
                                 </li>
                             @endcan
-
                         </ul>
                     </li>
 
@@ -276,7 +276,7 @@
                         <ul class="treeview-menu">
                             <li>
                                 <a href="{{route('report.marksheet_pub')}}"><i class="fa fa-file-pdf-o"></i><span>Marksheet Public</span></a>
-                            </li>
+                            </td>
                         </ul>
                     </li>
 
@@ -288,16 +288,15 @@
                         </li>
                     @endcanany
                 @endnotrole
+                
                 @role('Student')
                     <li>
                         <a href="{{route('report.marksheet_pub')}}"><i class="fa fa-file-pdf-o"></i><span>Marksheet Public</span></a>
                     </li>
                 @endrole
                 </ul>
-
             </li>
 
-            <!-- Frontend Website links and settings -->
             @notrole('Student')
             @if($frontend_website)
                 <li class="treeview">
@@ -387,7 +386,6 @@
                                     <i class="fa fa-question-circle"></i>
                                     <span>FAQ</span>
                                 </a>
-
                             </li>
                         @endcan
                         @can('site.timeline')
@@ -464,24 +462,9 @@
                             </a>
                         </li>
                     @endcan
-
-                    {{--<li>--}}
-                    {{--<a href="#">--}}
-                    {{--<i class="fa fa-download"></i> <span>Backup</span>--}}
-                    {{--</a>--}}
-                    {{--</li>--}}
-
-                    {{--<li>--}}
-                    {{--<a href="#">--}}
-                    {{--<i class="fa fa-upload"></i> <span>Restore</span>--}}
-                    {{--</a>--}}
-                    {{--</li>--}}
-
                 </ul>
             </li>
             @endrole
         </ul>
     </section>
-    <!-- /.sidebar -->
-    
-</aside>
+    </aside>

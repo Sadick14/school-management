@@ -45,9 +45,7 @@
                                 <th width="8%">Order</th>
                                 <th width="7%">Group</th>
                                 <th width="5%">Duration</th>
-                                <th width="5%">Have Selective</th>
-                                <th width="5%">Max Selective</th>
-                                <th width="15%">Subjects</th>
+                                <th width="20%">Subjects</th>
                                 <th width="7%">Note</th>
                                 <th width="10%">Status</th>
                                 <th class="notexport" width="10%">Action</th>
@@ -65,14 +63,6 @@
                                     <td>{{ $iclass->group }}</td>
                                     <td>
                                         {{$iclass->duration}} @if($iclass->duration > 1){{'years'}} @else {{'year'}}@endif
-                                    </td>
-                                    <td>
-                                        @if($iclass->have_selective_subject)
-                                            <span class="badge bg-green">Yes</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        {{$iclass->max_selective_subject}}
                                     </td>
                                     <td>{{ $iclass->subjects->pluck('name')->implode(', ') }}</td>
                                     <td>{{ $iclass->note }}</td>
@@ -109,9 +99,7 @@
                                 <th width="8%">Order</th>
                                 <th width="7%">Group</th>
                                 <th width="5%">Duration</th>
-                                <th width="5%">Have Selective</th>
-                                <th width="5%">Max Selective</th>
-                                <th width="15%">Subjects</th>
+                                <th width="20%">Subjects</th>
                                 <th width="7%">Note</th>
                                 <th width="10%">Status</th>
                                 <th class="notexport" width="10%">Action</th>

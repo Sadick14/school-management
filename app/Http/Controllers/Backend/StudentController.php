@@ -267,18 +267,6 @@ class StudentController extends Controller
         }
         //end
 
-        //for max subject validation
-        $classInfo = IClass::where('id', $classId)
-            ->first();
-        if($classInfo->have_selective_subject
-            && count($request->get('selective_subjects',[])) > $classInfo->max_selective_subject
-        ) {
-            return redirect()->route('student.create')
-                ->with("error", "Maximum {$classInfo->max_selective_subject} selective subject allowed!")
-                ->withInput($request->except(['password','class_id','section_id']));
-        }
-
-
         if(AppHelper::getInstituteCategory() != 'college') {
             // now check is academic year set or not
             $settings = AppHelper::getAppSettings();
@@ -425,13 +413,13 @@ class StudentController extends Controller
                 'regi_no' => $regiNo,
                 'student_id' => $student->id,
                 'class_id' => $data['class_id'],
-                'section_id' => $data['section_id'],
+                'section_id' => $data['section_id'] ?? null,
                 'academic_year_id' => $academicYearInfo->id,
-                'roll_no' => $data['roll_no'],
-                'shift' => $data['shift'],
-                'card_no' => $data['card_no'],
-                'board_regi_no' => $data['board_regi_no'],
-                'house' => $data['house'] ??  ''
+                'roll_no' => $data['roll_no'] ?? null,
+                'shift' => $data['shift'] ?? null,
+                'card_no' => $data['card_no'] ?? null,
+                'board_regi_no' => $data['board_regi_no'] ?? null,
+                'house' => $data['house'] ?? ''
             ];
 
            $registration =  Registration::create($registrationData);
@@ -581,7 +569,6 @@ class StudentController extends Controller
         $section = $regiInfo->section_id;
         $iclass = $regiInfo->class_id;
         $classInfo = IClass::where('id', $iclass)
-            ->select( 'have_selective_subject', 'max_selective_subject', 'have_elective_subject')
             ->first();
 
         //student subjects
@@ -742,17 +729,6 @@ class StudentController extends Controller
             }
         }
 
-        //for max subject validation
-        $classInfo = IClass::where('id', $regiInfo->class_id)
-            ->first();
-        if($classInfo->have_selective_subject
-            && count($request->get('selective_subjects',[])) > $classInfo->max_selective_subject
-        ) {
-            return redirect()->back()
-                ->with("error", "Maximum {$classInfo->max_selective_subject} subject allowed");
-        }
-        //validation end
-
         //fetch core subject from db
         $subjects = [];
         $oldSubjects = [];
@@ -813,19 +789,19 @@ class StudentController extends Controller
 
         $registrationData = [
 //            'class_id' => $data['class_id'],
-            'section_id' => $data['section_id'],
-            'roll_no' => $data['roll_no'],
-            'shift' => $data['shift'],
-            'card_no' => $data['card_no'],
-            'board_regi_no' => $data['board_regi_no'],
-            'house' => $data['house'] ??  ''
+            'section_id' => $data['section_id'] ?? null,
+            'roll_no' => $data['roll_no'] ?? null,
+            'shift' => $data['shift'] ?? null,
+            'card_no' => $data['card_no'] ?? null,
+            'board_regi_no' => $data['board_regi_no'] ?? null,
+            'house' => $data['house'] ?? ''
         ];
 
         // now check if student academic information changed, if so then log it
         $isChanged = false;
         $logData = [];
         $timeNow = Carbon::now();
-        if($regiInfo->section_id != $data['section_id']){
+        if($regiInfo->section_id != ($data['section_id'] ?? null)){
             $isChanged = true;
             $logData[] = [
                 'student_id' => $regiInfo->student_id,

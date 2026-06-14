@@ -91,10 +91,30 @@ class EmployeeController extends Controller
         ];
 
         $createUser = false;
-        if(strlen($request->get('username',''))){
-            $rules['email' ] = 'required|email|max:255|unique:students,email|unique:users,email';
-            $createUser = true;
+        $role_id = $request->get('role_id', 0);
 
+        // For teacher/employee role, username or password is required
+        if($role_id == AppHelper::EMP_TEACHER) {
+            $hasUsername = strlen($request->get('username','')) > 0;
+            $hasPassword = strlen($request->get('password','')) > 0;
+
+            if(!$hasUsername && !$hasPassword) {
+                return redirect()->back()
+                    ->with("error", 'Either username or password is required for teachers/employees.')
+                    ->withInput();
+            }
+
+            // If username is provided, email becomes required
+            if($hasUsername) {
+                $rules['email' ] = 'required|email|max:255|unique:students,email|unique:users,email';
+                $createUser = true;
+            }
+        } else {
+            // For other roles, check if username is provided
+            if(strlen($request->get('username',''))){
+                $rules['email' ] = 'required|email|max:255|unique:students,email|unique:users,email';
+                $createUser = true;
+            }
         }
 
         $this->validate($request, $rules);

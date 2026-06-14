@@ -69,7 +69,6 @@ class AcademicController extends Controller
                 'group' => 'nullable|max:20',
                 'note' => 'max:500',
                 'duration' => 'integer',
-                'max_selective_subject' => 'nullable|integer',
                 'subjects' => 'nullable|array',
                 'subjects.*' => 'integer|exists:subjects,id',
             ]);
@@ -81,12 +80,6 @@ class AcademicController extends Controller
             }
             else{
                 unset($data['numeric_value']);
-            }
-            if($request->has('have_selective_subject')){
-                $data['have_selective_subject'] = true;
-            }
-            else{
-                $data['have_selective_subject'] = false;
             }
             if($request->has('is_open_for_admission')){
                 $data['is_open_for_admission'] = 1;
@@ -128,13 +121,11 @@ class AcademicController extends Controller
         //for get request
         $iclass = IClass::find($id);
         $group = 'None';
-        $have_selective_subject = 0;
         $is_open_for_admission = 0;
         $selectedSubjects = [];
 
         if($iclass){
             $group = $iclass->group;
-            $have_selective_subject = $iclass->have_selective_subject;
             $is_open_for_admission = $iclass->is_open_for_admission;
             $selectedSubjects = $iclass->subjects->pluck('id')->toArray();
         }
@@ -150,7 +141,6 @@ class AcademicController extends Controller
             });
 
         return view('backend.academic.iclass.add', compact('iclass','group',
-            'have_selective_subject',
             'is_open_for_admission',
             'allSubjects',
             'selectedSubjects'
@@ -408,9 +398,7 @@ class AcademicController extends Controller
             $this->validate($request, [
                 'name' => 'required|min:1|max:255',
                 'code' => 'required|min:1|max:255',
-                'type' => 'required|numeric',
                 'teacher_id' => 'required|array',
-                'order' => 'required|integer',
             ]);
 
             DB::beginTransaction();
@@ -424,9 +412,11 @@ class AcademicController extends Controller
                     $data['exclude_in_result'] = false;
                 }
 
-                //a class is required (FK), assign new subjects to the first class until assigned via the class form
+                //auto-generate order sequence for new subjects
                 if(!$id){
                     $data['class_id'] = IClass::orderBy('order', 'asc')->value('id');
+                    $data['order'] = Subject::max('order') + 1;
+                    $data['type'] = 1;
                 }
 
                 $subject = Subject::updateOrCreate(
@@ -467,16 +457,14 @@ class AcademicController extends Controller
             ->pluck('name', 'id');
         $teacher_ids = [];
 
-        $subjectType = null;
         $exclude_in_result = 0;
 
         if($subject){
             $teacher_ids = $subject->teachers->pluck('id')->toArray();
-            $subjectType = $subject->getOriginal('type');
             $exclude_in_result = $subject->exclude_in_result;
         }
         return view('backend.academic.subject.add', compact('subject',
-            'teachers', 'teacher_ids', 'subjectType', 'exclude_in_result'));
+            'teachers', 'teacher_ids', 'exclude_in_result'));
 
     }
 

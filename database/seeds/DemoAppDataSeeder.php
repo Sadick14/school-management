@@ -216,9 +216,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Junior High School 1',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -230,9 +227,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Junior High School 2',
-                'have_selective_subject' => true,
-                'max_selective_subject' => 2,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -244,9 +238,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Junior High School 3',
-                 'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -261,9 +252,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Nursery 1',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -275,9 +263,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Nursery 2',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -289,9 +274,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Kindergarten 1',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -303,9 +285,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Kindergarten 2',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -317,9 +296,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Primary Class 1',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -331,9 +307,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Primary Class 2',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -345,9 +318,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Primary Class 3',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -359,9 +329,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Primary Class 4',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -373,9 +340,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Primary Class 5',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],
@@ -387,9 +351,6 @@ class DemoAppDataSeeder extends Seeder
                 'group' => 'None',
                 'status' => '1',
                 'note' => 'Primary Class 6',
-                'have_selective_subject' => false,
-                'max_selective_subject' => null,
-                'have_elective_subject' => false,
                 'created_by' => $created_by,
                 'created_at' => $created_at
             ],

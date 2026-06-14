@@ -311,13 +311,6 @@ class PublicController extends Controller
 
     public function getClassSubjectSettings($classId)
     {
-        $classInfo = IClass::where('id', $classId)
-            ->first();
-        $settings = $classInfo->only([
-            'have_selective_subject',
-            'max_selective_subject',
-            'have_elective_subject'
-        ]);
-        return response()->json($settings);
+        return response()->json([]);
     }
 }

@@ -282,7 +282,10 @@
                                         <label for="section_id">Section
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Set section that student belongs to"></i>
                                         </label>
-                                        {!! Form::select('section_id', $sections, $section , ['placeholder' => 'Pick a section...', 'id' => 'checkStudentCapacity', 'class' => 'form-control select2']) !!}
+                                        @php
+                                            $section_id_value = old('section_id', $section);
+                                        @endphp
+                                        {!! Form::select('section_id', $sections, $section_id_value , ['placeholder' => 'Pick a section...', 'id' => 'checkStudentCapacity', 'class' => 'form-control select2']) !!}
                                         <span class="form-control-feedback"></span>
                                         <span class="text-danger">{{ $errors->first('section_id') }}</span>
                                     </div>

@@ -229,16 +229,20 @@
                                 @if(!$employee)
                                 <div class="col-md-4">
                                     <div class="form-group has-feedback">
-                                        <label for="username">Username</label>
-                                        <input  type="text" class="form-control" value="" name="username" placeholder="leave blank if not need to create user" minlength="5" maxlength="255">
+                                        <label for="username">Username<span class="text-black">*</span>
+                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Required for teachers/employees to access the system"></i>
+                                        </label>
+                                        <input  type="text" class="form-control" value="" name="username" placeholder="required for system access" minlength="5" maxlength="255">
                                         <span class="glyphicon glyphicon-info-sign form-control-feedback"></span>
                                         <span class="text-danger">{{ $errors->first('username') }}</span>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group has-feedback">
-                                        <label for="password">Passwrod</label>
-                                        <input type="password" class="form-control" name="password" placeholder="leave blank if not need to create user" minlength="6" maxlength="50">
+                                        <label for="password">Password<span class="text-black">*</span>
+                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Required for teachers/employees to access the system"></i>
+                                        </label>
+                                        <input type="password" class="form-control" name="password" placeholder="required for system access" minlength="6" maxlength="50">
                                         <span class="glyphicon glyphicon-lock form-control-feedback"></span>
                                         <span class="text-danger">{{ $errors->first('password') }}</span>
                                     </div>

@@ -245,7 +245,7 @@
                                     <label for="">Section </label>
                                 </div>
                                 <div class="col-md-3">
-                                    <p for="">: {{$student->section->name}}</p>
+                                    <p for="">: {{optional($student->section)->name}}</p>
                                 </div>
                             </div>
                             <div class="row">

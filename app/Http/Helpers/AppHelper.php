@@ -89,10 +89,7 @@ class AppHelper
     ];
     const RELIGION = [
         1 => 'Islam',
-        2 => 'Hindu',
-        3 => 'Cristian',
-        4 => 'Buddhist',
-        5 => 'Other',
+        2 => 'Christian',
     ];
 
     const COUNTRIES = [

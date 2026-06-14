@@ -42,22 +42,14 @@
                                         <span class="text-danger">{{ $errors->first('name') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-8">
                                     <div class="form-group has-feedback">
-                                        <label for="code">Code<span class="text-danger">*</span></label>
-                                        <input  type="number" class="form-control" name="code" placeholder="101" value="@if($subject){{ $subject->code }}@else{{ old('code') }}@endif" required min="1">
-                                        <span class="fa fa-sort-numeric-asc form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('code') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group has-feedback">
-                                        <label for="type">Type<span class="text-danger">*</span>
-                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="select subject type"></i>
+                                        <label for="code">Code<span class="text-danger">*</span>
+                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Code can be numeric (100) or alphanumeric (ENG)"></i>
                                         </label>
-                                        {!! Form::select('type', AppHelper::SUBJECT_TYPE, $subjectType , ['class' => 'form-control select2', 'required' => 'true']) !!}
-                                        <span class="form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('type') }}</span>
+                                        <input type="text" class="form-control" name="code" placeholder="ENG or 100" value="@if($subject){{ $subject->code }}@else{{ old('code') }}@endif" required minlength="1" maxlength="50">
+                                        <span class="fa fa-code form-control-feedback"></span>
+                                        <span class="text-danger">{{ $errors->first('code') }}</span>
                                     </div>
                                 </div>
 
@@ -73,17 +65,7 @@
                                         <span class="text-danger">{{ $errors->first('teacher_id') }}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-group has-feedback">
-                                        <label for="order">Order sequence<span class="text-danger">*</span>
-                                            <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Position/sorting/ordering number"></i>
-                                        </label>
-                                        <input  type="number" class="form-control" name="order" placeholder="1,2,3,5"  value="@if($subject){{ $subject->order }}@else{{ old('order') }}@endif" min="0" required>
-                                        <span class="fa fa-sort-numeric-asc form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('order') }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <div class="form-group has-feedback">
                                         <label for="open_for_marks_entry">Exclude in Result
                                             <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Check it, if this subject is not add in result calculation."></i>
