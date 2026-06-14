@@ -40,6 +40,41 @@ This will:
 6. Create the `public/storage` symlink (for uploaded logos/files).
 7. Cache config, routes and views for performance.
 
+## 3b. Or run the steps manually
+
+If you'd rather not run the script, here are the same steps as individual
+commands:
+
+```powershell
+# Create .env
+Copy-Item ".env.production.example" ".env"
+
+# Install PHP dependencies
+composer install --no-dev --optimize-autoloader
+
+# Generate app key (skip if .env already has APP_KEY=base64:...)
+php artisan key:generate --force
+
+# Install JS dependencies and build assets
+npm install
+npm run backend-prod
+npm run frontend-prod
+
+# Create an empty SQLite database (skip if copying one over, see step 4)
+New-Item -ItemType File -Path "database\database.sqlite"
+
+# Run migrations
+php artisan migrate --force
+
+# Storage symlink (for uploaded logos/files)
+php artisan storage:link
+
+# Cache config, routes and views for performance
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
 ## 4. Set up the database
 
 The SQLite database file (`database/database.sqlite`) is **not** included in
