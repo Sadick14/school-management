@@ -43,7 +43,7 @@
 <!-- Child Page css -->
 </head>
 
-<body class="hold-transition skin-blue sidebar-mini fixed @yield('bodyCssClass')">
+<body class="hold-transition skin-blue sidebar-mini fixed @yield('bodyCssClass')" data-slimscroll="false">
 {{--<div class="overlay-loader">--}}
 {{--<div class="loader" ></div>--}}
 {{--</div>--}}
