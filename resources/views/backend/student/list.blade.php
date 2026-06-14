@@ -33,23 +33,23 @@
                             @if(AppHelper::getInstituteCategory() == 'college')
                             <div class="col-md-3">
                             <div class="form-group has-feedback">
-                                    {!! Form::select('academic_year', $academic_years, $acYear , ['placeholder' => 'Pick a year...','class' => 'form-control select2 auto-submit', 'required' => 'true']) !!}
+                                    {!! Form::select('academic_year', $academic_years, $acYear , ['placeholder' => 'All Years','class' => 'form-control select2 auto-submit']) !!}
                                 </div>
                             </div>
                             @endif
                             <div class="col-md-3">
                             <div class="form-group has-feedback">
-                                    {!! Form::select('class', $classes, $iclass , ['placeholder' => 'Pick a class...','class' => 'form-control select2 auto-submit', 'id' => 'class_select', 'required' => 'true']) !!}
+                                    {!! Form::select('class', $classes, $iclass , ['placeholder' => 'All Classes','class' => 'form-control select2 auto-submit', 'id' => 'class_select']) !!}
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group has-feedback">
-                                    {!! Form::select('section', $sections, $section_id , ['placeholder' => 'Pick a section...','class' => 'form-control select2 auto-submit', 'id' => 'student_list_filter', 'required' => 'true']) !!}
+                                    {!! Form::select('section', $sections, $section_id , ['placeholder' => 'All Sections','class' => 'form-control select2 auto-submit', 'id' => 'student_list_filter']) !!}
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group has-feedback">
-                                    {!! Form::select('status', ['1' => "Active", '0' => 'Deactivate'], $status , ['class' => 'form-control select2 auto-submit', 'required' => 'true']) !!}
+                                    {!! Form::select('status', ['' => 'All', '1' => "Active", '0' => 'Deactivate'], $status , ['class' => 'form-control select2 auto-submit']) !!}
                                 </div>
                             </div>
                             <div class="box-tools pull-right">

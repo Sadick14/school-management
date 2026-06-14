@@ -42,13 +42,13 @@ class StudentController extends Controller
         $iclass = null;
         $students = [];
         $sections = [];
-        $status = '1';
+        $status = null;
 
         // get query parameter for filter the fetch
         $class_id = $request->query->get('class',0);
         $section_id = $request->query->get('section',0);
         $acYear = $request->query->get('academic_year',0);
-        $status = $request->query->get('status','1');
+        $status = $request->query->get('status', null);
 
 
         $classInfo = null;
@@ -76,13 +76,20 @@ class StudentController extends Controller
             }
         }
 
-        // Build query for students
-        $query = Registration::where('status', $status)->with('student', 'class');
+        // Build query for students - show all by default
+        $query = Registration::with('student', 'class');
 
+        // Filter by status
+        if($status) {
+            $query->where('status', $status);
+        }
+
+        // Filter by academic year if provided
         if($acYear) {
             $query->where('academic_year_id', $acYear);
         }
 
+        // Filter by class if provided
         if($class_id){
             $query->where('class_id', $class_id);
 
@@ -1174,12 +1181,29 @@ class StudentController extends Controller
                 $name = trim($name);
                 if (!$name) continue;
 
+                // Find existing student or create new one
                 $student = Student::where('name', $name)
                     ->where('status', AppHelper::ACTIVE)
                     ->first();
 
                 if (!$student) {
-                    continue;
+                    $student = Student::create([
+                        'name' => $name,
+                        'dob' => '2010-01-01',
+                        'gender' => 1,
+                        'religion' => '',
+                        'blood_group' => '',
+                        'nationality' => '',
+                        'email' => '',
+                        'phone_no' => '',
+                        'father_name' => '',
+                        'mother_name' => '',
+                        'guardian' => '',
+                        'present_address' => '',
+                        'permanent_address' => 'TBD',
+                        'sms_receive_no' => 1,
+                        'status' => AppHelper::ACTIVE,
+                    ]);
                 }
 
                 $existingRegi = Registration::where('student_id', $student->id)
