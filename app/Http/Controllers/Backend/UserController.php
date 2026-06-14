@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Backend;
 
 use App\AcademicYear;
 use App\Employee;
+use App\Expense;
+use App\FeePayment;
 use App\IClass;
 use App\PasswordReset;
 use App\Permission;
 use App\Registration;
 use App\Role;
+use App\StudentLedger;
 use App\Subject;
 use App\User;
 use App\UserRole;
@@ -228,11 +231,17 @@ class UserController extends Controller
         $subjects = 0;
         $attendanceChartPresentData = [];
         $attendanceChartAbsentData = [];
+        $financeKpis = null;
+        $financeChartData = null;
 
         //only admin
         if($userRoleId == AppHelper::USER_ADMIN){
             //these models records count
             [$teachers, $employee, $students, $subjects] = $this->getStatisticData();
+        }
+
+        if(in_array($userRoleId, [AppHelper::USER_ADMIN, AppHelper::USER_ACCOUNTANT])) {
+            [$financeKpis, $financeChartData] = $this->getFinanceDashboardData();
         }
 
         //all user except students
@@ -248,8 +257,67 @@ class UserController extends Controller
             'subjects',
             'userRoleId',
             'attendanceChartPresentData',
-            'attendanceChartAbsentData'
+            'attendanceChartAbsentData',
+            'financeKpis',
+            'financeChartData'
         ));
+    }
+
+    private function getFinanceDashboardData()
+    {
+        $today = Carbon::today();
+        $monthStart = Carbon::now()->startOfMonth();
+        $monthEnd = Carbon::now()->endOfMonth();
+        $academicYearId = AppHelper::getAcademicYear();
+
+        $revenueToday = FeePayment::whereDate('payment_date', $today)->sum('total_amount');
+        $revenueMonth = FeePayment::whereBetween('payment_date', [$monthStart, $monthEnd])->sum('total_amount');
+        $expensesMonth = Expense::whereBetween('expense_date', [$monthStart, $monthEnd])->sum('amount');
+        $outstandingArrears = StudentLedger::where('status', AppHelper::ACTIVE)
+            ->when($academicYearId, function ($q) use ($academicYearId) {
+                $q->where('academic_year_id', $academicYearId);
+            })
+            ->where('balance', '>', 0)
+            ->sum('balance');
+
+        $driver = DB::getDriverName();
+        $monthPaymentExpr = $driver === 'sqlite'
+            ? "strftime('%Y-%m', payment_date)"
+            : "DATE_FORMAT(payment_date, '%Y-%m')";
+        $monthExpenseExpr = $driver === 'sqlite'
+            ? "strftime('%Y-%m', expense_date)"
+            : "DATE_FORMAT(expense_date, '%Y-%m')";
+
+        $monthlyRevenue = FeePayment::select(DB::raw("{$monthPaymentExpr} as month"), DB::raw('SUM(total_amount) as total'))
+            ->groupBy('month')->orderBy('month', 'asc')->limit(12)->get();
+        $monthlyExpenses = Expense::select(DB::raw("{$monthExpenseExpr} as month"), DB::raw('SUM(amount) as total'))
+            ->groupBy('month')->orderBy('month', 'asc')->limit(12)->get();
+
+        $expenseByCategory = Expense::select('expense_category_id', DB::raw('SUM(amount) as total'))
+            ->whereBetween('expense_date', [$monthStart, $monthEnd])
+            ->groupBy('expense_category_id')
+            ->with('category')
+            ->get();
+
+        $kpis = [
+            'revenue_today' => $revenueToday,
+            'revenue_month' => $revenueMonth,
+            'expenses_month' => $expensesMonth,
+            'net_month' => $revenueMonth - $expensesMonth,
+            'outstanding_arrears' => $outstandingArrears,
+        ];
+
+        $chartData = [
+            'trend_labels' => $monthlyRevenue->pluck('month')->toArray(),
+            'revenue' => $monthlyRevenue->pluck('total')->toArray(),
+            'expenses' => $monthlyExpenses->pluck('total')->toArray(),
+            'category_labels' => $expenseByCategory->map(function ($r) {
+                return $r->category ? $r->category->name : 'Unknown';
+            })->values()->toArray(),
+            'category_data' => $expenseByCategory->pluck('total')->toArray(),
+        ];
+
+        return [$kpis, $chartData];
     }
 
     /**

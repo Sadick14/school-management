@@ -10,6 +10,7 @@ use App\Mark;
 use App\Registration;
 use App\Result;
 use App\Section;
+use App\Services\BillingService;
 use App\Subject;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -86,7 +87,9 @@ class MarkController extends Controller
                 }])->select('regi_no','student_id','roll_no','id');
             }])->where('academic_year_id', $acYear)
                 ->where('class_id', $class_id)
-                ->where('section_id', $section_id)
+                ->when($section_id, function ($query) use($section_id){
+                    $query->where('section_id', $section_id);
+                })
                 ->where('subject_id', $subject_id)
                 ->where('exam_id', $exam_id)
                 ->select( 'registration_id', 'ca_marks', 'exam_marks', 'total_marks', 'grade', 'present','id')
@@ -145,7 +148,7 @@ class MarkController extends Controller
             $subjects = $subjectsQuery->pluck('name', 'id');
 
             $exams = Exam::where('status', AppHelper::ACTIVE)
-                ->where('class_id', $class_id)
+                ->forClass($class_id)
                 ->pluck('name', 'id');
 
         }
@@ -266,7 +269,9 @@ class MarkController extends Controller
 //                ->with('subjects')
                 ->where('academic_year_id', $acYear)
                 ->where('class_id', $class_id)
-                ->where('section_id', $section_id)
+                ->when($section_id, function ($query) use($section_id){
+                    $query->where('section_id', $section_id);
+                })
                 ->where('status', AppHelper::ACTIVE)
                 ->select( 'regi_no', 'roll_no', 'id','student_id')
                 ->orderBy('roll_no','asc')
@@ -289,7 +294,7 @@ class MarkController extends Controller
                 ->pluck('name', 'id');
 
             $exams = Exam::where('status', AppHelper::ACTIVE)
-                ->where('class_id', $class_id)
+                ->forClass($class_id)
                 ->pluck('name', 'id');
 
         }
@@ -321,6 +326,106 @@ class MarkController extends Controller
         ));
     }
 
+    /**
+     * Per-student marks summary across all subjects for an exam
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function summary(Request $request)
+    {
+        $students = collect();
+        $subjects = collect();
+        $acYear = null;
+        $class_id = null;
+        $section_id = null;
+        $exam_id = null;
+        $sections = [];
+        $academic_years = [];
+        $exams = [];
+
+        if ($request->isMethod('post')) {
+
+            $rules = [
+                'academic_year_id' => 'nullable|integer',
+                'class_id' => 'required|integer',
+                'section_id' => 'nullable|integer',
+                'exam_id' => 'required|integer',
+            ];
+
+            $this->validate($request, $rules);
+
+            if(AppHelper::getInstituteCategory() == 'college') {
+                $acYear = $request->get('academic_year_id', 0);
+            }
+            else{
+                $acYear = AppHelper::getAcademicYear();
+            }
+
+            $class_id = $request->get('class_id', 0);
+            $section_id = $request->get('section_id') ?: null;
+            $exam_id = $request->get('exam_id', 0);
+
+            $subjects = Subject::where('status', AppHelper::ACTIVE)
+                ->where('class_id', $class_id)
+                ->orderBy('order','asc')
+                ->select('id','name')
+                ->get();
+
+            $students = Registration::where('status', AppHelper::ACTIVE)
+                ->where('academic_year_id', $acYear)
+                ->where('class_id', $class_id)
+                ->when($section_id, function ($query) use($section_id){
+                    $query->where('section_id', $section_id);
+                })
+                ->select('id','regi_no','roll_no','section_id')
+                ->with(['info' => function($query){
+                    $query->select('name','id');
+                }])
+                ->with(['section' => function($query){
+                    $query->select('name','id');
+                }])
+                ->with(['marks' => function($query) use($acYear, $class_id, $exam_id){
+                    $query->select('registration_id','subject_id','ca_marks','exam_marks','total_marks','grade','present')
+                        ->where('academic_year_id', $acYear)
+                        ->where('class_id', $class_id)
+                        ->where('exam_id', $exam_id);
+                }])
+                ->get()
+                ->sortBy('roll_no');
+
+            $sections = Section::where('status', AppHelper::ACTIVE)
+                ->where('class_id', $class_id)
+                ->pluck('name', 'id');
+
+            $exams = Exam::where('status', AppHelper::ACTIVE)
+                ->forClass($class_id)
+                ->pluck('name', 'id');
+        }
+
+        $classes = IClass::where('status', AppHelper::ACTIVE)
+            ->orderBy('order','asc')
+            ->pluck('name', 'id');
+
+        //if its college then have to get those academic years
+        if(AppHelper::getInstituteCategory() == 'college') {
+            $academic_years = AcademicYear::where('status', '1')->orderBy('id', 'desc')->pluck('title', 'id');
+        }
+
+        return view('backend.exam.marks.summary', compact(
+            'students',
+            'subjects',
+            'acYear',
+            'class_id',
+            'section_id',
+            'exam_id',
+            'classes',
+            'sections',
+            'academic_years',
+            'exams'
+        ));
+    }
+
 
     /**
      *  Old store logic in 2.0
@@ -333,7 +438,7 @@ class MarkController extends Controller
         $validateRules = [
             'academic_year_id' => 'nullable|integer',
             'class_id' => 'required|integer',
-            'section_id' => 'required|integer',
+            'section_id' => 'nullable|integer',
             'subject_id' => 'required|integer',
             'exam_id' => 'required|integer',
             'registrationIds' => 'required|array',
@@ -352,7 +457,7 @@ class MarkController extends Controller
         }
 
         $class_id = $request->get('class_id',0);
-        $section_id = $request->get('section_id',0);
+        $section_id = $request->get('section_id') ?: null;
         $subject_id = $request->get('subject_id',0);
         $exam_id = $request->get('exam_id',0);
 
@@ -373,7 +478,9 @@ class MarkController extends Controller
 
         $entryExists = Mark::where('academic_year_id', $acYear)
             ->where('class_id', $class_id)
-            ->where('section_id', $section_id)
+            ->when($section_id, function ($query) use($section_id){
+                $query->where('section_id', $section_id);
+            })
             ->where('subject_id', $subject_id)
             ->where('exam_id', $exam_id)
             ->whereIn('registration_id', $request->get('registrationIds'))
@@ -458,12 +565,13 @@ class MarkController extends Controller
             return redirect()->route('marks.create')->with("error",$message);
         }
 
-        $sectionInfo = Section::where('id', $section_id)->first();
+        $sectionInfo = $section_id ? Section::where('id', $section_id)->first() : null;
         $subjectInfo = Subject::with(['class' => function($query){
             $query->select('name','id');
         }])->where('id', $subject_id)->first();
         //now notify the admins about this record
-        $msg = "Class {$subjectInfo->class->name}, section {$sectionInfo->name}, {$subjectInfo->name} subject marks added for {$examInfo->name} exam  by ".auth()->user()->name;
+        $sectionMsgPart = $sectionInfo ? "section {$sectionInfo->name}, " : '';
+        $msg = "Class {$subjectInfo->class->name}, {$sectionMsgPart}{$subjectInfo->name} subject marks added for {$examInfo->name} exam  by ".auth()->user()->name;
         $nothing = AppHelper::sendNotificationToAdmins('info', $msg);
         // Notification end
 
@@ -704,7 +812,7 @@ class MarkController extends Controller
                 ->pluck('name', 'id');
 
             $exams = Exam::where('status', AppHelper::ACTIVE)
-                ->where('class_id', $class_id)
+                ->forClass($class_id)
                 ->pluck('name', 'id');
 
         }
@@ -873,6 +981,7 @@ class MarkController extends Controller
                 ->get();
 
             $markMissingStudents = [];
+            $noCountableSubjectStudents = [];
             $isDataMissing = false;
             $marksMissingStudentInfo = 0;
             $resultInsertData = [];
@@ -914,7 +1023,12 @@ class MarkController extends Controller
                         }
                     }
 
-                    $overallPercent = $totalSubject ? ceil($totalPercentSum / $totalSubject) : 0;
+                    if ($totalSubject == 0) {
+                        $noCountableSubjectStudents[] = $student->regi_no;
+                        continue;
+                    }
+
+                    $overallPercent = ceil($totalPercentSum / $totalSubject);
                     $overallGrade = AppHelper::findGradeFromPercent($overallPercent, $gradingRules);
 
                     $timeStampNow = Carbon::now(env('APP_TIMEZONE', 'Africa/Accra'));
@@ -948,7 +1062,10 @@ class MarkController extends Controller
             //if student not present exam time on this school
             $message = '';
             if(count($markMissingStudents)){
-                $message = "Student with these ".implode(',',$markMissingStudents)." registration numbers are not attend in this exam!";
+                $message .= " Student with these ".implode(',',$markMissingStudents)." registration numbers are not attend in this exam!";
+            }
+            if(count($noCountableSubjectStudents)){
+                $message .= " Student with these ".implode(',',$noCountableSubjectStudents)." registration numbers have no result-countable subject (all their subjects are excluded from result)!";
             }
 
 
@@ -1287,6 +1404,11 @@ class MarkController extends Controller
                         $newStudent->subjects()->sync($subjects);
                     }
 
+                    app(BillingService::class)->carryForwardBalances(
+                        $oldStudent->registration_id,
+                        $newStudent->id
+                    );
+
                     $rollNo++;
                     $totalPromoted++;
                 }
@@ -1326,6 +1448,10 @@ class MarkController extends Controller
                     ];
 
                     $newStudent = Registration::create($registrationData);
+                    app(BillingService::class)->carryForwardBalances(
+                        $oldStudent->registration_id,
+                        $newStudent->id
+                    );
                     $oldAndNewStudents[$oldStudent->registration_id] = $newStudent;
 
                     $totalPromoted++;

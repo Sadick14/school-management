@@ -155,6 +155,13 @@
                             </a>
                         </li>
                     @endcan
+                    @can('marks.summary')
+                        <li>
+                            <a href="{{ URL::route('marks.summary') }}">
+                                <i class="fa fa-table"></i> <span>Marks Summary</span>
+                            </a>
+                        </li>
+                    @endcan
                     @can('result.index')
                         <li>
                             <a href="{{ URL::route('result.index') }}">
@@ -173,6 +180,42 @@
                 </a>
             </li>
             @endcan
+
+            @canany(['finance.term.index', 'finance.fee_type.index', 'finance.fee_structure.index', 'finance.payment.wizard', 'finance.expense.index', 'finance.expense_category.index', 'finance.report.index'])
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-money"></i>
+                    <span>Finance</span>
+                    <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                </a>
+                <ul class="treeview-menu">
+                    @can('finance.term.index')
+                        <li><a href="{{ URL::route('finance.term.index') }}"><i class="fa fa-calendar"></i> <span>Terms</span></a></li>
+                    @endcan
+                    @can('finance.fee_type.index')
+                        <li><a href="{{ URL::route('finance.fee_type.index') }}"><i class="fa fa-tags"></i> <span>Fee Types</span></a></li>
+                    @endcan
+                    @can('finance.fee_structure.index')
+                        <li><a href="{{ URL::route('finance.fee_structure.index') }}"><i class="fa fa-list-alt"></i> <span>Fee Structure</span></a></li>
+                    @endcan
+                    @can('finance.payment.wizard')
+                        <li><a href="{{ URL::route('finance.payment.wizard') }}"><i class="fa fa-credit-card"></i> <span>Collect Payment</span></a></li>
+                    @endcan
+                    @can('finance.payment.index')
+                        <li><a href="{{ URL::route('finance.payment.index') }}"><i class="fa fa-file-text"></i> <span>Payments</span></a></li>
+                    @endcan
+                    @can('finance.expense.index')
+                        <li><a href="{{ URL::route('finance.expense.index') }}"><i class="fa fa-shopping-cart"></i> <span>Expenses</span></a></li>
+                    @endcan
+                    @can('finance.expense_category.index')
+                        <li><a href="{{ URL::route('finance.expense_category.index') }}"><i class="fa fa-folder-open"></i> <span>Expense Categories</span></a></li>
+                    @endcan
+                    @can('finance.report.index')
+                        <li><a href="{{ URL::route('finance.report.index') }}"><i class="fa fa-bar-chart"></i> <span>Reports</span></a></li>
+                    @endcan
+                </ul>
+            </li>
+            @endcanany
 
             @canany(['hrm.employee.index', 'hrm.leave.index', 'hrm.work_outside.index', 'hrm.policy'])
             <li class="treeview">

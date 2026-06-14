@@ -45,7 +45,7 @@
                                     <td>{{$loop->iteration}}</td>
                                     <td>{{$student->info->name}}</td>
                                     @if($showClass) <td>{{$student->class->name}}</td> @endif
-                                    @if($showSection) <td>{{$student->section->name}}</td> @endif
+                                    @if($showSection) <td>{{ optional($student->section)->name }}</td> @endif
                                     <td>{{$student->regi_no}}</td>
                                     <td>{{$student->roll_no}}</td>
                                     <td>{{$student->info->father_name}} {{$student->info->father_phone_no}}</td>

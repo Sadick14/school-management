@@ -270,6 +270,8 @@ Route::group(
         ->name('marks.edit');
     Route::post('marks/update/{id}', 'MarkController@update')
         ->name('marks.update');
+    Route::any('marks/summary', 'MarkController@summary')
+        ->name('marks.summary');
     //result
     Route::any('result', 'MarkController@resultIndex')
         ->name('result.index');
@@ -294,6 +296,58 @@ Route::group(
         ->name('report.employee_list');
     Route::any('report/employee-monthly-attendance', 'ReportController@employeeMonthlyAttendance')
         ->name('report.employee_monthly_attendance');
+
+    // Finance
+    Route::any('finance/term', 'AcademicTermController@index')->name('finance.term.index');
+    Route::post('finance/term', 'AcademicTermController@index')->name('finance.term.destroy');
+    Route::get('finance/term/create', 'AcademicTermController@create')->name('finance.term.create');
+    Route::post('finance/term/create', 'AcademicTermController@create')->name('finance.term.store');
+    Route::get('finance/term/edit/{id}', 'AcademicTermController@create')->name('finance.term.edit');
+    Route::post('finance/term/update/{id}', 'AcademicTermController@create')->name('finance.term.update');
+    Route::post('finance/term/status/{id}', 'AcademicTermController@status')->name('finance.term.status');
+
+    Route::any('finance/fee-type', 'FeeTypeController@index')->name('finance.fee_type.index');
+    Route::post('finance/fee-type', 'FeeTypeController@index')->name('finance.fee_type.destroy');
+    Route::get('finance/fee-type/create', 'FeeTypeController@create')->name('finance.fee_type.create');
+    Route::post('finance/fee-type/create', 'FeeTypeController@create')->name('finance.fee_type.store');
+    Route::get('finance/fee-type/edit/{id}', 'FeeTypeController@create')->name('finance.fee_type.edit');
+    Route::post('finance/fee-type/update/{id}', 'FeeTypeController@create')->name('finance.fee_type.update');
+    Route::post('finance/fee-type/status/{id}', 'FeeTypeController@status')->name('finance.fee_type.status');
+
+    Route::any('finance/fee-structure', 'FeeStructureController@index')->name('finance.fee_structure.index');
+    Route::post('finance/fee-structure', 'FeeStructureController@index')->name('finance.fee_structure.destroy');
+    Route::get('finance/fee-structure/create', 'FeeStructureController@create')->name('finance.fee_structure.create');
+    Route::post('finance/fee-structure/create', 'FeeStructureController@create')->name('finance.fee_structure.store');
+    Route::get('finance/fee-structure/edit/{id}', 'FeeStructureController@create')->name('finance.fee_structure.edit');
+    Route::post('finance/fee-structure/update/{id}', 'FeeStructureController@create')->name('finance.fee_structure.update');
+    Route::post('finance/fee-structure/status/{id}', 'FeeStructureController@status')->name('finance.fee_structure.status');
+
+    Route::get('finance/payment', 'PaymentController@index')->name('finance.payment.index');
+    Route::get('finance/payment/wizard', 'PaymentController@wizard')->name('finance.payment.wizard');
+    Route::get('finance/payment/students', 'PaymentController@getStudents')->name('finance.payment.students');
+    Route::get('finance/payment/search-students', 'PaymentController@searchStudents')->name('finance.payment.search_students');
+    Route::post('finance/payment/dues', 'PaymentController@getDues')->name('finance.payment.dues');
+    Route::post('finance/payment/store', 'PaymentController@store')->name('finance.payment.store');
+    Route::get('finance/payment/receipt/{id}', 'PaymentController@receipt')->name('finance.payment.receipt');
+    Route::post('finance/payment/generate-billing', 'PaymentController@generateBilling')->name('finance.payment.generate_billing');
+
+    Route::any('finance/expense', 'ExpenseController@index')->name('finance.expense.index');
+    Route::post('finance/expense', 'ExpenseController@index')->name('finance.expense.destroy');
+    Route::get('finance/expense/create', 'ExpenseController@create')->name('finance.expense.create');
+    Route::post('finance/expense/create', 'ExpenseController@create')->name('finance.expense.store');
+    Route::get('finance/expense/edit/{id}', 'ExpenseController@create')->name('finance.expense.edit');
+    Route::post('finance/expense/update/{id}', 'ExpenseController@create')->name('finance.expense.update');
+    Route::get('finance/expense/chart', 'ExpenseController@chart')->name('finance.expense.chart');
+
+    Route::any('finance/expense-category', 'ExpenseCategoryController@index')->name('finance.expense_category.index');
+    Route::post('finance/expense-category', 'ExpenseCategoryController@index')->name('finance.expense_category.destroy');
+    Route::get('finance/expense-category/create', 'ExpenseCategoryController@create')->name('finance.expense_category.create');
+    Route::post('finance/expense-category/create', 'ExpenseCategoryController@create')->name('finance.expense_category.store');
+    Route::get('finance/expense-category/edit/{id}', 'ExpenseCategoryController@create')->name('finance.expense_category.edit');
+    Route::post('finance/expense-category/update/{id}', 'ExpenseCategoryController@create')->name('finance.expense_category.update');
+    Route::post('finance/expense-category/status/{id}', 'ExpenseCategoryController@status')->name('finance.expense_category.status');
+
+    Route::any('finance/report', 'FinanceReportController@index')->name('finance.report.index');
 
 });
 

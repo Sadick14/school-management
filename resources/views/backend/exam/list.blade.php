@@ -56,7 +56,7 @@
                                         <td>
                                             {{$loop->iteration}}
                                         </td>
-                                        <td>{{ $exam->class->name }}</td>
+                                        <td>{{ $exam->classes->pluck('name')->implode(', ') }}</td>
                                         <td>{{ $exam->name }}</td>
                                         <td>{{ $exam->ca_weight }}% : {{ 100 - $exam->ca_weight }}%</td>
                                         <td>

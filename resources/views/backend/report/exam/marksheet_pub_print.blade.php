@@ -17,7 +17,7 @@
                     <h6><span class="text-bold">Class:</span> {{$student->class->name}}</h6>
                 </div>
                 <div class="col-xs-2" style="">
-                    <h6><span class="text-bold">Section:</span> {{$student->section->name}}</h6>
+                    <h6><span class="text-bold">Section:</span> {{ optional($student->section)->name }}</h6>
                     <h6><span class="text-bold">Regi No:</span> {{$student->regi_no}}</h6>
                     <h6><span class="text-bold">Roll No:</span> {{$student->roll_no}}</h6>
                 </div>

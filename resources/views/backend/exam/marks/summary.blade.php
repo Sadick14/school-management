@@ -2,7 +2,7 @@
 @extends('backend.layouts.master')
 
 <!-- Page title -->
-@section('pageTitle') Result @endsection
+@section('pageTitle') Marks Summary @endsection
 <!-- End block -->
 
 
@@ -11,12 +11,13 @@
     <!-- Section header -->
     <section class="content-header">
         <h1>
-            Result
-            <small>List</small>
+            Marks
+            <small>Summary</small>
         </h1>
         <ol class="breadcrumb">
             <li><a href="{{URL::route('user.dashboard')}}"><i class="fa fa-dashboard"></i> Dashboard</a></li>
-            <li class="active"> Result</li>
+            <li><a href="{{URL::route('marks.index')}}"><i class="fa icon-markmain"></i> Marks</a></li>
+            <li class="active"> Summary</li>
         </ol>
     </section>
     <!-- ./Section header -->
@@ -25,29 +26,23 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-info">
-                    <div class="box-header">
-                        <div class="box-tools pull-right">
-                            <a class="btn btn-info btn-sm" href="{{ URL::route('result.create') }}"><i class="fa fa-plus-circle"></i> Generate New</a>
-                            @can('result.delete')
-                                <a class="btn btn-danger btn-sm" href="{{ URL::route('result.delete') }}"><i class="fa fa-trash"></i> Delete Result</a>
-                            @endcan
-                        </div>
-                    </div>
                     <!-- /.box-header -->
                     <div class="box-body">
                         <div class="row">
                             <div class="col-md-12">
                                 <fieldset>
                                     <legend>Filters:</legend>
-                                    <form novalidate id="entryForm" action="{{URL::Route('result.index')}}" method="post" enctype="multipart/form-data">
+                                    <form novalidate id="entryForm" action="{{URL::Route('marks.summary')}}" method="post" enctype="multipart/form-data">
                                         @csrf
                                         <div class="row">
-                                            <div class="col-md-2">
-                                                <div class="form-group has-feedback">
-                                                    {!! Form::select('academic_year_id', $academic_years, $acYear , ['placeholder' => 'Pick a year...', 'class' => 'form-control select2', 'required' => 'true']) !!}
+                                            @if(AppHelper::getInstituteCategory() == 'college')
+                                                <div class="col-md-3">
+                                                    <div class="form-group has-feedback">
+                                                        {!! Form::select('academic_year_id', $academic_years, $acYear , ['placeholder' => 'Pick a year...', 'class' => 'form-control select2', 'required' => 'true']) !!}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-md-3">
+                                            @endif
+                                            <div class="col-md-4">
                                                 <div class="form-group has-feedback">
                                                     {!! Form::select('class_id', $classes, $class_id , ['placeholder' => 'Pick a class...', 'id' => 'class_change', 'class' => 'form-control select2', 'required' => 'true']) !!}
                                                 </div>
@@ -62,18 +57,18 @@
                                                     {!! Form::select('exam_id', $exams, $exam_id , ['placeholder' => 'Pick a exam...','class' => 'form-control select2', 'required' => 'true']) !!}
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div class="row">
                                             <div class="col-md-2">
-                                                <button type="submit" class="btn btn-info"><i class="fa fa-filter"></i> Get List</button>
+                                                <button type="submit" class="btn btn-info"><i class="fa fa-filter"></i> Get Summary</button>
                                             </div>
                                         </div>
-
                                     </form>
-
                                 </fieldset>
                             </div>
                         </div>
                         <hr>
-                        @if($students)
+                        @if($students->count())
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="table-responsive">
@@ -87,9 +82,10 @@
                                                 @if(!$section_id)
                                                     <th>Section</th>
                                                 @endif
-                                                <th>Grade</th>
-                                                <th>Average %</th>
-                                                <th class="notexport" width="10%">Action</th>
+                                                @foreach($subjects as $subject)
+                                                    <th>{{ $subject->name }}</th>
+                                                @endforeach
+                                                <th>Entered</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -102,22 +98,30 @@
                                                     @if(!$section_id)
                                                         <td>{{ optional($student->section)->name }}</td>
                                                     @endif
-                                                    @if($student->result->first())
-                                                    <td>{{$student->result->first()->grade}}</td>
-                                                    <td>{{$student->result->first()->total_marks}}</td>
-                                                    <td width="10%">
-                                                        <div class="btn-group">
-                                                            <a style="margin-left: 5px;" title="Marksheet" href="#0" data-regino="{{$student->regi_no}}" class="btn btn-primary btn-sm viewMarksheetPubBtn"><i class="fa fa-file-pdf-o"></i></a>
-                                                        </div>
-                                                    </td>
-                                                    @else
-                                                        <td></td>
-                                                        <td></td>
+                                                    @php $enteredCount = 0; @endphp
+                                                    @foreach($subjects as $subject)
+                                                        @php $mark = $student->marks->firstWhere('subject_id', $subject->id); @endphp
                                                         <td>
-                                                            <button class="btn btn-warning btn-sm" title="This student didn't attend in exam!"><i class="fa fa-question-circle"></i></button>
+                                                            @if($mark)
+                                                                @php $enteredCount++; @endphp
+                                                                @if($mark->present == 0)
+                                                                    <span class="badge bg-red">Absent</span>
+                                                                @else
+                                                                    CA: {{$mark->ca_marks}} / Exam: {{$mark->exam_marks}}<br>
+                                                                    <strong>{{$mark->total_marks}}% ({{$mark->grade}})</strong>
+                                                                @endif
+                                                            @else
+                                                                <span class="text-muted">&mdash;</span>
+                                                            @endif
                                                         </td>
-                                                    @endif
-
+                                                    @endforeach
+                                                    <td>
+                                                        @if($enteredCount == $subjects->count())
+                                                            <span class="badge bg-green">{{$enteredCount}}/{{$subjects->count()}}</span>
+                                                        @else
+                                                            <span class="badge bg-yellow">{{$enteredCount}}/{{$subjects->count()}}</span>
+                                                        @endif
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                             </tbody>
@@ -130,9 +134,10 @@
                                                 @if(!$section_id)
                                                     <th>Section</th>
                                                 @endif
-                                                <th>Grade</th>
-                                                <th>Average %</th>
-                                                <th class="notexport" width="5%">Action</th>
+                                                @foreach($subjects as $subject)
+                                                    <th>{{ $subject->name }}</th>
+                                                @endforeach
+                                                <th>Entered</th>
                                             </tr>
                                             </tfoot>
                                         </table>
@@ -155,9 +160,9 @@
     <script type="text/javascript">
         window.section_list_url = '{{URL::Route("academic.section")}}';
         window.exam_list_url = '{{URL::Route("exam.index")}}';
-        window.marksheetpub_url = '{{URL::Route("report.marksheet_pub")}}';
+        window.changeExportColumnIndex = -1;
         $(document).ready(function () {
-            Academic.resultInit();
+            Academic.marksSummaryInit();
         });
     </script>
 @endsection

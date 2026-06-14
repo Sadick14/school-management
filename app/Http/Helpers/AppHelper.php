@@ -78,6 +78,27 @@ class AppHelper
     const USER_RECEPTIONIST = 7;
     const ACTIVE = '1';
     const INACTIVE = '0';
+
+    const PAYMENT_METHODS = [
+        'cash' => 'Cash',
+        'bank' => 'Bank Transfer',
+        'mobile_money' => 'Mobile Money',
+        'cheque' => 'Cheque',
+    ];
+
+    const BILLING_CYCLES = [
+        'term' => 'Per Term',
+        'daily' => 'Daily',
+        'once_per_year' => 'Once Per Year',
+        'once_per_student' => 'Once Per Student',
+        'ad_hoc' => 'Ad Hoc',
+    ];
+
+    const FEE_APPLIES_TO = [
+        'all' => 'All Students',
+        'new_students_only' => 'New Students Only',
+        'continuing_only' => 'Continuing Students Only',
+    ];
     const EMP_TEACHER = AppHelper::USER_TEACHER;
     const EMP_SHIFTS = [
         1 => 'Day',

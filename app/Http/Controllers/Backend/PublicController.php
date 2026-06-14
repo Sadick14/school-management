@@ -224,7 +224,7 @@ class PublicController extends Controller
                 ->where('class_id', $student->class_id)
                 ->pluck('exam_id');
 
-            $examsData = Exam::where('class_id', $student->class_id)
+            $examsData = Exam::forClass($student->class_id)
                 ->whereIn('id', $publishedExams)
                 ->with(['marks' => function($q) use($student){
                     $q->where('registration_id', $student->id)

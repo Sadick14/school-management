@@ -114,6 +114,57 @@
             </div>
         @endif
 
+        @if($financeKpis && in_array($userRoleId, [AppHelper::USER_ADMIN, AppHelper::USER_ACCOUNTANT]))
+            <div class="row">
+                <div class="col-lg-3 col-sm-6 col-xs-12">
+                    <div class="modern-stat-card stat-color-teal">
+                        <div class="stat-content">
+                            <h3 class="stat-number">{{ number_format($financeKpis['revenue_today'], 2) }}</h3>
+                            <p class="stat-label">Revenue Today</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-6 col-xs-12">
+                    <div class="modern-stat-card stat-color-pink">
+                        <div class="stat-content">
+                            <h3 class="stat-number">{{ number_format($financeKpis['revenue_month'], 2) }}</h3>
+                            <p class="stat-label">Revenue (Month)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-6 col-xs-12">
+                    <div class="modern-stat-card stat-color-purple">
+                        <div class="stat-content">
+                            <h3 class="stat-number">{{ number_format($financeKpis['expenses_month'], 2) }}</h3>
+                            <p class="stat-label">Expenses (Month)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-6 col-xs-12">
+                    <div class="modern-stat-card stat-color-orange">
+                        <div class="stat-content">
+                            <h3 class="stat-number">{{ number_format($financeKpis['outstanding_arrears'], 2) }}</h3>
+                            <p class="stat-label">Outstanding Arrears</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="box box-info">
+                        <div class="box-header with-border"><h3>Revenue vs Expenses</h3></div>
+                        <div class="box-body"><canvas id="financeDashboardTrend" height="100"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="box box-info">
+                        <div class="box-header with-border"><h3>Expenses by Category</h3></div>
+                        <div class="box-body"><canvas id="financeDashboardCategory" height="200"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @if($userRoleId != AppHelper::USER_STUDENT)
         <div class="row">
             {{--<div class="col-md-6">--}}
@@ -163,6 +214,9 @@
 <!-- BEGIN PAGE JS-->
 @section('extraScript')
     <script src="{{asset(mix('js/dashboard.js'))}}"></script>
+    @if($financeKpis && in_array($userRoleId, [AppHelper::USER_ADMIN, AppHelper::USER_ACCOUNTANT]))
+    <script src="{{ asset(mix('js/finance.js')) }}"></script>
+    @endif
     <script type="text/javascript">
         @if($userRoleId != AppHelper::USER_STUDENT)
             window.attendanceLabel = @php echo json_encode(array_keys($attendanceChartPresentData)) @endphp;
@@ -170,8 +224,21 @@
             window.absentData = @php echo json_encode(array_values($attendanceChartAbsentData)) @endphp;
         @endif
 
+        @if($financeChartData && in_array($userRoleId, [AppHelper::USER_ADMIN, AppHelper::USER_ACCOUNTANT]))
+            window.financeDashboardTrendLabels = @json($financeChartData['trend_labels']);
+            window.financeDashboardRevenue = @json($financeChartData['revenue']);
+            window.financeDashboardExpenses = @json($financeChartData['expenses']);
+            window.financeDashboardCategoryLabels = @json($financeChartData['category_labels']);
+            window.financeDashboardCategoryData = @json($financeChartData['category_data']);
+        @endif
+
         $(document).ready(function () {
             Dashboard.init();
+            @if($financeChartData && in_array($userRoleId, [AppHelper::USER_ADMIN, AppHelper::USER_ACCOUNTANT]))
+            if (typeof Finance !== 'undefined') {
+                Finance.dashboardInit();
+            }
+            @endif
 
         });
 

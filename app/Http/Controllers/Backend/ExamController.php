@@ -29,7 +29,7 @@ class ExamController extends Controller
 
             if($class_id){
                 $exams = Exam::where('status', AppHelper::ACTIVE)
-                    ->where('class_id', $class_id)
+                    ->forClass($class_id)
                     ->if(strlen($onlyOpenForExam), 'open_for_marks_entry', '=', true)
                     ->select('name as text', 'id')
                     ->orderBy('name', 'asc')
@@ -54,7 +54,7 @@ class ExamController extends Controller
         }
 
         $class_id = $request->query->get('class',0);
-        $exams = Exam::iclass($class_id)->with('class')->get();
+        $exams = Exam::forClass($class_id)->with('classes')->get();
 
         $classes = IClass::where('status', AppHelper::ACTIVE)
             ->orderBy('order','asc')
@@ -78,7 +78,7 @@ class ExamController extends Controller
             $class_id = $request->query->get('class_id', 0);
             if($class_id){
                 $exams = Exam::where('status', AppHelper::ACTIVE)
-                    ->where('class_id', $class_id)
+                    ->forClass($class_id)
                     ->select('name as text', 'id')
                     ->orderBy('name', 'asc')->get();
 
@@ -117,8 +117,9 @@ class ExamController extends Controller
             ->pluck('name', 'id');
 
         $open_for_marks_entry = 0;
+        $selectedClassIds = [];
 
-        return view('backend.exam.add', compact('exam','classes','open_for_marks_entry'));
+        return view('backend.exam.add', compact('exam','classes','open_for_marks_entry','selectedClassIds'));
     }
 
     /**
@@ -133,19 +134,24 @@ class ExamController extends Controller
         $this->validate(
             $request, [
                 'name' => 'required|max:255',
-                'class_id' => 'required|integer',
+                'class_id' => 'required|array',
+                'class_id.*' => 'integer|exists:i_classes,id',
                 'ca_weight' => 'required|integer|min:0|max:100',
             ]
         );
 
 
-        $data = $request->all();
+        $data = $request->except('class_id');
         if($request->has('open_for_marks_entry')){
             $data['open_for_marks_entry'] = true;
         }
 
         // now save employee
-        Exam::create($data);
+        $exam = Exam::create($data);
+
+        $classIds = $request->get('class_id');
+        $exam->classes()->sync($classIds);
+        $this->generateExamRulesForClasses($exam, $classIds);
 
         //now notify the admins about this record
         $msg = $data['name']." exam added by ".auth()->user()->name;
@@ -154,6 +160,41 @@ class ExamController extends Controller
 
         return redirect()->route('exam.create')->with('success', 'Exam added!');
 
+    }
+
+    /**
+     * Auto-generate exam rules (with default grading values) for every active
+     * subject in the given classes, for the given exam. Skips subjects that
+     * already have a rule for this exam.
+     *
+     * @param Exam $exam
+     * @param array $classIds
+     * @return void
+     */
+    private function generateExamRulesForClasses(Exam $exam, array $classIds)
+    {
+        if(empty($classIds)){
+            return;
+        }
+
+        $gradeId = AppHelper::getAppSettings('result_default_grade_id') ?: Grade::min('id');
+
+        $subjects = Subject::where('status', AppHelper::ACTIVE)
+            ->whereIn('class_id', $classIds)
+            ->get(['id', 'class_id']);
+
+        foreach ($subjects as $subject) {
+            ExamRule::firstOrCreate(
+                ['exam_id' => $exam->id, 'subject_id' => $subject->id],
+                [
+                    'class_id' => $subject->class_id,
+                    'grade_id' => $gradeId,
+                    'ca_total_marks' => 100,
+                    'exam_total_marks' => 100,
+                    'pass_mark' => 40,
+                ]
+            );
+        }
     }
 
 
@@ -165,12 +206,17 @@ class ExamController extends Controller
      */
     public function edit($id)
     {
-        $exam = Exam::findOrFail($id);
+        $exam = Exam::with('classes')->findOrFail($id);
         //todo: need protection to massy events. like modify after used or delete after user
 
         $open_for_marks_entry = $exam->open_for_marks_entry;
 
-        return view('backend.exam.add', compact('exam', 'open_for_marks_entry'));
+        $classes = IClass::where('status', AppHelper::ACTIVE)
+            ->orderBy('order','asc')
+            ->pluck('name', 'id');
+        $selectedClassIds = $exam->classes->pluck('id')->toArray();
+
+        return view('backend.exam.add', compact('exam', 'open_for_marks_entry', 'classes', 'selectedClassIds'));
 
 
     }
@@ -191,12 +237,13 @@ class ExamController extends Controller
             $request, [
                 'name' => 'required|max:255',
                 'ca_weight' => 'required|integer|min:0|max:100',
+                'class_id' => 'required|array',
+                'class_id.*' => 'integer|exists:i_classes,id',
             ]
         );
 
 
-        $data = $request->all();
-        unset($data['class_id']);
+        $data = $request->except('class_id');
         if($request->has('open_for_marks_entry')){
             $data['open_for_marks_entry'] = true;
         }
@@ -207,6 +254,13 @@ class ExamController extends Controller
 
         $exam->fill($data);
         $exam->save();
+
+        $newClassIds = $request->get('class_id');
+        $existingClassIds = $exam->classes->pluck('id')->toArray();
+        $addedClassIds = array_diff($newClassIds, $existingClassIds);
+
+        $exam->classes()->sync($newClassIds);
+        $this->generateExamRulesForClasses($exam, array_values($addedClassIds));
 
         return redirect()->route('exam.index')->with('success', 'Exam Updated!');
     }
@@ -410,9 +464,9 @@ class ExamController extends Controller
         $classes = IClass::where('status', AppHelper::ACTIVE)
             ->orderBy('order','asc')
             ->pluck('name', 'id');
-        $exams = Exam::where('class_id', $class_id)
-            ->where('status', AppHelper::ACTIVE)
-            ->pluck('name', 'id');;
+        $exams = Exam::where('status', AppHelper::ACTIVE)
+            ->forClass($class_id)
+            ->pluck('name', 'id');
 
         return view('backend.exam.rule.list', compact('rules', 'classes', 'exams','class_id','exam_id'));
     }
@@ -532,8 +586,8 @@ class ExamController extends Controller
             ->where('status', AppHelper::ACTIVE)
             ->orderBy('order','asc')
             ->pluck('name', 'id');
-        $exams = Exam::where('class_id', $rule->class_id)
-            ->where('status', AppHelper::ACTIVE)
+        $exams = Exam::where('status', AppHelper::ACTIVE)
+            ->forClass($rule->class_id)
             ->pluck('name', 'id');
         $grades = Grade::pluck('name', 'id');;
 

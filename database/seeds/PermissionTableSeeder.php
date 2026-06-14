@@ -844,6 +844,10 @@ class PermissionTableSeeder extends Seeder
                 "name" => "Marks Edit",
                 "group" => "Exam"
             ],
+            [   "slug" => "marks.summary",
+                "name" => "Marks Summary View",
+                "group" => "Exam"
+            ],
             // Exam Marks End
             // Exam Result
             [   "slug" => "result.index",
@@ -869,6 +873,53 @@ class PermissionTableSeeder extends Seeder
                 "group" => "Exam"
             ],
             // Promotion End
+        ];
+
+        $financePermissionList = [
+            [   "slug" => "finance.term.index", "name" => "Term View", "group" => "Finance" ],
+            [   "slug" => "finance.term.create", "name" => "Term Create", "group" => "Finance" ],
+            [   "slug" => "finance.term.store", "name" => "Term Create", "group" => "Finance" ],
+            [   "slug" => "finance.term.edit", "name" => "Term Edit", "group" => "Finance" ],
+            [   "slug" => "finance.term.update", "name" => "Term Edit", "group" => "Finance" ],
+            [   "slug" => "finance.term.destroy", "name" => "Term Delete", "group" => "Finance" ],
+            [   "slug" => "finance.term.status", "name" => "Term Status Change", "group" => "Finance" ],
+            [   "slug" => "finance.fee_type.index", "name" => "Fee Type View", "group" => "Finance" ],
+            [   "slug" => "finance.fee_type.create", "name" => "Fee Type Create", "group" => "Finance" ],
+            [   "slug" => "finance.fee_type.store", "name" => "Fee Type Create", "group" => "Finance" ],
+            [   "slug" => "finance.fee_type.edit", "name" => "Fee Type Edit", "group" => "Finance" ],
+            [   "slug" => "finance.fee_type.update", "name" => "Fee Type Edit", "group" => "Finance" ],
+            [   "slug" => "finance.fee_type.destroy", "name" => "Fee Type Delete", "group" => "Finance" ],
+            [   "slug" => "finance.fee_type.status", "name" => "Fee Type Status Change", "group" => "Finance" ],
+            [   "slug" => "finance.fee_structure.index", "name" => "Fee Structure View", "group" => "Finance" ],
+            [   "slug" => "finance.fee_structure.create", "name" => "Fee Structure Create", "group" => "Finance" ],
+            [   "slug" => "finance.fee_structure.store", "name" => "Fee Structure Create", "group" => "Finance" ],
+            [   "slug" => "finance.fee_structure.edit", "name" => "Fee Structure Edit", "group" => "Finance" ],
+            [   "slug" => "finance.fee_structure.update", "name" => "Fee Structure Edit", "group" => "Finance" ],
+            [   "slug" => "finance.fee_structure.destroy", "name" => "Fee Structure Delete", "group" => "Finance" ],
+            [   "slug" => "finance.fee_structure.status", "name" => "Fee Structure Status Change", "group" => "Finance" ],
+            [   "slug" => "finance.payment.index", "name" => "Payment View", "group" => "Finance" ],
+            [   "slug" => "finance.payment.wizard", "name" => "Payment Collect", "group" => "Finance" ],
+            [   "slug" => "finance.payment.students", "name" => "Payment Load Students", "group" => "Finance" ],
+            [   "slug" => "finance.payment.search_students", "name" => "Payment Search Students", "group" => "Finance" ],
+            [   "slug" => "finance.payment.dues", "name" => "Payment Load Dues", "group" => "Finance" ],
+            [   "slug" => "finance.payment.store", "name" => "Payment Create", "group" => "Finance" ],
+            [   "slug" => "finance.payment.receipt", "name" => "Payment Receipt", "group" => "Finance" ],
+            [   "slug" => "finance.payment.generate_billing", "name" => "Payment Generate Billing", "group" => "Finance" ],
+            [   "slug" => "finance.expense.index", "name" => "Expense View", "group" => "Finance" ],
+            [   "slug" => "finance.expense.create", "name" => "Expense Create", "group" => "Finance" ],
+            [   "slug" => "finance.expense.store", "name" => "Expense Create", "group" => "Finance" ],
+            [   "slug" => "finance.expense.edit", "name" => "Expense Edit", "group" => "Finance" ],
+            [   "slug" => "finance.expense.update", "name" => "Expense Edit", "group" => "Finance" ],
+            [   "slug" => "finance.expense.destroy", "name" => "Expense Delete", "group" => "Finance" ],
+            [   "slug" => "finance.expense.chart", "name" => "Expense Chart View", "group" => "Finance" ],
+            [   "slug" => "finance.expense_category.index", "name" => "Expense Category View", "group" => "Finance" ],
+            [   "slug" => "finance.expense_category.create", "name" => "Expense Category Create", "group" => "Finance" ],
+            [   "slug" => "finance.expense_category.store", "name" => "Expense Category Create", "group" => "Finance" ],
+            [   "slug" => "finance.expense_category.edit", "name" => "Expense Category Edit", "group" => "Finance" ],
+            [   "slug" => "finance.expense_category.update", "name" => "Expense Category Edit", "group" => "Finance" ],
+            [   "slug" => "finance.expense_category.destroy", "name" => "Expense Category Delete", "group" => "Finance" ],
+            [   "slug" => "finance.expense_category.status", "name" => "Expense Category Status Change", "group" => "Finance" ],
+            [   "slug" => "finance.report.index", "name" => "Finance Report View", "group" => "Finance" ],
         ];
 
 
@@ -900,7 +951,7 @@ class PermissionTableSeeder extends Seeder
         //merge all permissions and insert into db
         $permissions = array_merge($commonPermissionList, $exclusiveAdministratorPermissionList,
             $administratorPermissionList, $academicPermissionList, $websitePermissionList, $hrmPermissionList,
-            $examPermissionList, $reportsPermissionList);
+            $examPermissionList, $reportsPermissionList, $financePermissionList);
 
 
         echo PHP_EOL , 'seeding permissions...';
@@ -922,6 +973,13 @@ class PermissionTableSeeder extends Seeder
         foreach ($roles as $role){
             echo 'seeding '.$role->name.' permissions...', PHP_EOL;
             $role->permissions()->saveMany($permissions);
+        }
+
+        $accountant = Role::where('name', 'Accountant')->first();
+        if ($accountant) {
+            $financePermissions = Permission::where('group', 'Finance')->get();
+            $accountant->permissions()->saveMany($financePermissions);
+            echo 'seeding Accountant finance permissions...', PHP_EOL;
         }
     }
 }

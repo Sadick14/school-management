@@ -18,7 +18,6 @@ class Exam extends Model
      * @var array
      */
     protected $fillable = [
-        'class_id',
         'name',
         'ca_weight',
         'status',
@@ -26,15 +25,17 @@ class Exam extends Model
     ];
 
 
-    public function class()
+    public function classes()
     {
-        return $this->belongsTo('App\IClass', 'class_id');
+        return $this->belongsToMany('App\IClass', 'exam_iclass', 'exam_id', 'class_id');
     }
 
-    public function scopeIclass($query, $classId)
+    public function scopeForClass($query, $classId)
     {
         if($classId){
-            return $query->where('class_id', $classId);
+            return $query->whereHas('classes', function ($q) use ($classId) {
+                $q->where('i_classes.id', $classId);
+            });
         }
 
         return $query;

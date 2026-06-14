@@ -901,6 +901,21 @@ export default class Academic {
         }
     }
 
+    static marksSummaryInit() {
+        Generic.initCommonPageJS();
+        $('#class_change').on('change', function () {
+            let class_id = $(this).val();
+            if (class_id) {
+                Academic.getSection(class_id);
+                Academic.getExam(class_id);
+            }
+            else {
+                $('select[name="section_id"]').empty().select2({ placeholder: 'Pick a section...' });
+                $('select[name="exam_id"]').empty().select2({ placeholder: 'Pick a exam...' });
+            }
+        });
+    }
+
     static promotionInit() {
         $("#entryForm").validate({
             errorElement: "em",

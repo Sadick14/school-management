@@ -29,16 +29,16 @@
                         @csrf
                     <div class="box-body">
                         <div class="row">
-                            @if(!$exam)
-                                <div class="col-md-4">
-                                    <div class="form-group has-feedback">
-                                        <label for="class_id">Class Name<span class="text-danger">*</span></label>
-                                        {!! Form::select('class_id', $classes, null , ['placeholder' => 'Pick a class...','class' => 'form-control select2', 'required' => 'true']) !!}
-                                        <span class="form-control-feedback"></span>
-                                        <span class="text-danger">{{ $errors->first('class_id') }}</span>
-                                    </div>
+                            <div class="col-md-4">
+                                <div class="form-group has-feedback">
+                                    <label for="class_id">Classes<span class="text-danger">*</span>
+                                        <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="This exam will apply to all subjects in every selected class. Exam rules will be auto-generated for any newly added class."></i>
+                                    </label>
+                                    {!! Form::select('class_id[]', $classes, $selectedClassIds , ['placeholder' => 'Pick class(es)...','class' => 'form-control select2', 'multiple' => 'multiple', 'required' => 'true']) !!}
+                                    <span class="form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('class_id') }}</span>
                                 </div>
-                            @endif
+                            </div>
                             <div class="col-md-4">
                                 <div class="form-group has-feedback">
                                     <label for="name">Name<span class="text-danger">*</span></label>

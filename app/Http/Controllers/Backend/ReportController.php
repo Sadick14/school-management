@@ -402,7 +402,8 @@ class ReportController extends Controller
             $headerData = new \stdClass();
             $headerData->reportTitle = 'Marksheet';
             $headerData->reportSubTitle = $exam->name.'-'.$student->acYear->title;
-            $fileName = $headerData->reportTitle."_Class_{$student->class->name}_Section_{$student->section->name}_Roll_{$student->roll_no}";
+            $sectionName = optional($student->section)->name ?? 'NA';
+            $fileName = $headerData->reportTitle."_Class_{$student->class->name}_Section_{$sectionName}_Roll_{$student->roll_no}";
             $headerData->reportFileName = ReportHelper::replaceSpaceCharInString($fileName, ' ', '_');
 
 
