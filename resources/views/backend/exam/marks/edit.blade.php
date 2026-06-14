@@ -47,20 +47,14 @@
                                 <form novalidate id="markForm" action="{{URL::Route('marks.update', $marks->id)}}" method="post" enctype="multipart/form-data">
                                     @csrf
                                     <div class="table-responsive">
-                                        <table class="table table-bordered table-striped list_view_table display responsive no-wrap haveForm" width="100%">
+                                        <table class="table table-bordered table-striped list_view_table display responsive no-wrap haveForm" width="100%" data-ca-weight="{{$examInfo->ca_weight}}">
                                             <thead>
                                             <tr>
                                                 <th>Student Name</th>
                                                 <th>Roll No.</th>
-                                                @php
-                                                    $marksDistributions = json_decode($examRule->marks_distribution);
-                                                @endphp
-                                                @foreach($marksDistributions as $distribution)
-                                                    @if($distribution->total_marks > 0)
-                                                        <th>{{AppHelper::MARKS_DISTRIBUTION_TYPES[$distribution->type]}}</th>
-                                                    @endif
-                                                @endforeach
-                                                <th>Total Marks</th>
+                                                <th>CA Marks (out of {{$examRule->ca_total_marks}})</th>
+                                                <th>Exam Marks (out of {{$examRule->exam_total_marks}})</th>
+                                                <th>Total %</th>
                                                 <th>Absent</th>
                                             </tr>
                                             </thead>
@@ -72,16 +66,12 @@
                                                 <td>
                                                     {{$marks->student->roll_no}}
                                                 </td>
-                                                @php
-                                                    $achivemarks = json_decode($marks->marks, true);
-                                                @endphp
-                                                @foreach($marksDistributions as $distribution)
-                                                    @if($distribution->total_marks > 0)
-                                                    <td>
-                                                        <input type="number" @if($marks->present == 0) readonly @endif class="form-control"  name="type[{{$distribution->type}}]" value="{{$achivemarks[$distribution->type]}}" required max="{{$distribution->total_marks}}" min="0">
-                                                    </td>
-                                                    @endif
-                                                @endforeach
+                                                <td>
+                                                    <input type="number" @if($marks->present == 0) readonly @endif class="form-control ca-marks-input" name="ca_marks" value="{{$marks->ca_marks}}" required max="{{$examRule->ca_total_marks}}" min="0">
+                                                </td>
+                                                <td>
+                                                    <input type="number" @if($marks->present == 0) readonly @endif class="form-control exam-marks-input" name="exam_marks" value="{{$marks->exam_marks}}" required max="{{$examRule->exam_total_marks}}" min="0">
+                                                </td>
                                                 <td>
                                                     <input type="text" readonly class="form-control totalMarks" value="{{$marks->total_marks}}">
                                                 </td>

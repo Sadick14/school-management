@@ -40,20 +40,15 @@ class ExamController extends Controller
 
             // single exam details
             $exam_id = $request->query->get('exam_id', 0);
-            $examInfo = Exam::select('marks_distribution_types')
+            $examInfo = Exam::select('ca_weight')
                 ->where('id',$exam_id)
                 ->where('status', AppHelper::ACTIVE)
                 ->first();
             if($examInfo){
-                $marksDistributionTypes = [];
-                foreach (json_decode($examInfo->marks_distribution_types) as $type){
-                    $marksDistributionTypes[] = [
-                        'id' => $type,
-                        'text' => AppHelper::MARKS_DISTRIBUTION_TYPES[$type]
-                    ];
-                }
-
-                return response()->json($marksDistributionTypes);
+                return response()->json([
+                    'ca_weight' => $examInfo->ca_weight,
+                    'exam_weight' => 100 - $examInfo->ca_weight,
+                ]);
             }
             return response('Exam not found!', 404);
         }
@@ -92,20 +87,15 @@ class ExamController extends Controller
 
             // single exam details
             $exam_id = $request->query->get('exam_id', 0);
-            $examInfo = Exam::select('marks_distribution_types')
+            $examInfo = Exam::select('ca_weight')
                 ->where('id',$exam_id)
                 ->where('status', AppHelper::ACTIVE)
                 ->first();
             if($examInfo){
-                $marksDistributionTypes = [];
-                foreach (json_decode($examInfo->marks_distribution_types) as $type){
-                    $marksDistributionTypes[] = [
-                        'id' => $type,
-                        'text' => AppHelper::MARKS_DISTRIBUTION_TYPES[$type]
-                    ];
-                }
-
-                return response()->json($marksDistributionTypes);
+                return response()->json([
+                    'ca_weight' => $examInfo->ca_weight,
+                    'exam_weight' => 100 - $examInfo->ca_weight,
+                ]);
             }
             return response('Exam not found!', 404);
         }
@@ -121,7 +111,6 @@ class ExamController extends Controller
     public function create()
     {
         $exam = null;
-        $marksDistributionTypes = [1,2];
 
         $classes = IClass::where('status', AppHelper::ACTIVE)
             ->orderBy('order','asc')
@@ -129,7 +118,7 @@ class ExamController extends Controller
 
         $open_for_marks_entry = 0;
 
-        return view('backend.exam.add', compact('exam', 'marksDistributionTypes','classes','open_for_marks_entry'));
+        return view('backend.exam.add', compact('exam','classes','open_for_marks_entry'));
     }
 
     /**
@@ -145,14 +134,12 @@ class ExamController extends Controller
             $request, [
                 'name' => 'required|max:255',
                 'class_id' => 'required|integer',
-                'elective_subject_point_addition' => 'required|numeric',
-                'marks_distribution_types' => 'required|array',
+                'ca_weight' => 'required|integer|min:0|max:100',
             ]
         );
 
 
         $data = $request->all();
-        $data['marks_distribution_types'] = json_encode($data['marks_distribution_types']);
         if($request->has('open_for_marks_entry')){
             $data['open_for_marks_entry'] = true;
         }
@@ -180,11 +167,10 @@ class ExamController extends Controller
     {
         $exam = Exam::findOrFail($id);
         //todo: need protection to massy events. like modify after used or delete after user
-        $marksDistributionTypes = json_decode($exam->marks_distribution_types,true);
 
         $open_for_marks_entry = $exam->open_for_marks_entry;
 
-        return view('backend.exam.add', compact('exam', 'marksDistributionTypes', 'open_for_marks_entry'));
+        return view('backend.exam.add', compact('exam', 'open_for_marks_entry'));
 
 
     }
@@ -204,15 +190,13 @@ class ExamController extends Controller
         $this->validate(
             $request, [
                 'name' => 'required|max:255',
-                'elective_subject_point_addition' => 'required|numeric',
-                'marks_distribution_types' => 'required|array',
+                'ca_weight' => 'required|integer|min:0|max:100',
             ]
         );
 
 
         $data = $request->all();
         unset($data['class_id']);
-        $data['marks_distribution_types'] = json_encode($data['marks_distribution_types']);
         if($request->has('open_for_marks_entry')){
             $data['open_for_marks_entry'] = true;
         }
@@ -301,34 +285,6 @@ class ExamController extends Controller
             return redirect()->route('exam.grade.index')->with('success', 'Record deleted!');
         }
 
-        // check for ajax request here
-        if($request->ajax()){
-            $grade_id = $request->query->get('grade_id', 0);
-            $gradeInfo = Grade::select('rules')
-                ->where('id',$grade_id)
-                ->first();
-            if($gradeInfo){
-                $marks = [];
-                foreach (json_decode($gradeInfo->rules) as $rule){
-                    $marks[] = $rule->marks_from;
-                    $marks[] = $rule->marks_upto;
-                }
-
-                sort($marks);
-                //passing marks will be the last position in the array
-                $totalMarks = $marks[count($marks) - 1];
-                //passing marks will be the 3rd position in the array
-                $passingMarks = $marks[2];
-
-                $data = [
-                    'totalMarks' => $totalMarks,
-                    'passingMarks' => $passingMarks,
-                ];
-
-                return response()->json($data);
-            }
-            return response('Grade not found!', 404);
-        }
         //for get request
         $grades = Grade::get();
         return view('backend.exam.grade.list', compact('grades'));
@@ -359,7 +315,6 @@ class ExamController extends Controller
             $this->validate($request, [
                 'name' => 'required|max:255',
                 'grade' => 'required|array',
-                'point' => 'required|array',
                 'marks_from' => 'required|array',
                 'marks_upto' => 'required|array',
             ]);
@@ -369,7 +324,6 @@ class ExamController extends Controller
             foreach ($inputs['grade'] as $key => $value){
                 $rules[] = [
                     'grade' => $value,
-                    'point' => $inputs['point'][$key],
                     'marks_from' => $inputs['marks_from'][$key],
                     'marks_upto' => $inputs['marks_upto'][$key]
                 ];
@@ -450,9 +404,6 @@ class ExamController extends Controller
                 ->with(['grade' => function($query){
                     $query->select('name','id');
                 }])
-                ->with(['combineSubject' => function($query){
-                    $query->select('name','id');
-                }])
                 ->get();
         }
 
@@ -479,13 +430,9 @@ class ExamController extends Controller
                 'subject_id' => 'required|integer',
                 'exam_id' => 'required|integer',
                 'grade_id' => 'required|integer',
-                'combine_subject_id' => 'nullable|integer',
-                'passing_rule' => 'required|integer',
-                'total_exam_marks' => 'required|numeric',
-                'over_all_pass' => 'required|numeric',
-                'type' => 'required|array',
-                'total_marks' => 'required|array',
-                'pass_marks' => 'required|array',
+                'ca_total_marks' => 'required|integer|min:1',
+                'exam_total_marks' => 'required|integer|min:1',
+                'pass_mark' => 'required|integer|min:0|max:100',
             ];
 
             $this->validate($request, $validateRules);
@@ -501,17 +448,6 @@ class ExamController extends Controller
 
             //validation end
 
-            $marksDistribution = [];
-            foreach ($inputs['type'] as $key => $value){
-                $marksDistribution[] = [
-                    'type' => $value,
-                    'total_marks' => $inputs['total_marks'][$key],
-                    'pass_marks' => $inputs['pass_marks'][$key],
-                ];
-            }
-
-            $inputs['marks_distribution'] = json_encode($marksDistribution);
-
             ExamRule::create($inputs);
 
 
@@ -526,9 +462,7 @@ class ExamController extends Controller
 
         //for get request
         $rule = null;
-        $combine_subject = null;
         $subject_id = null;
-        $passing_rule = null;
         $exam_id = null;
         $grade_id = null;
 
@@ -541,11 +475,9 @@ class ExamController extends Controller
 
 
         return view('backend.exam.rule.add', compact('rule',
-            'combine_subject',
             'subject_id',
             'exam_id',
             'grade_id',
-            'passing_rule',
             'classes',
             'exams',
             'grades',
@@ -567,13 +499,9 @@ class ExamController extends Controller
             $validateRules = [
                 'exam_id' => 'required|integer',
                 'grade_id' => 'required|integer',
-                'combine_subject_id' => 'nullable|integer',
-                'passing_rule' => 'required|integer',
-                'total_exam_marks' => 'required|numeric',
-                'over_all_pass' => 'required|numeric',
-                'type' => 'required|array',
-                'total_marks' => 'required|array',
-                'pass_marks' => 'required|array',
+                'ca_total_marks' => 'required|integer|min:1',
+                'exam_total_marks' => 'required|integer|min:1',
+                'pass_mark' => 'required|integer|min:0|max:100',
             ];
 
             $this->validate($request, $validateRules);
@@ -581,17 +509,6 @@ class ExamController extends Controller
             $inputs = $request->all();
             unset($inputs['subject_id']);
             //validation end
-
-            $marksDistribution = [];
-            foreach ($inputs['type'] as $key => $value){
-                $marksDistribution[] = [
-                    'type' => $value,
-                    'total_marks' => $inputs['total_marks'][$key],
-                    'pass_marks' => $inputs['pass_marks'][$key],
-                ];
-            }
-
-            $inputs['marks_distribution'] = json_encode($marksDistribution);
 
             $rule->fill($inputs);
             $rule->save();
@@ -607,8 +524,6 @@ class ExamController extends Controller
         }
 
 
-        $combine_subject = $rule->combine_subject_id;
-        $passing_rule = $rule->passing_rule;
         $subject_id = $rule->subject_id;
         $exam_id = $rule->exam_id;
         $grade_id = $rule->grade_id;
@@ -623,11 +538,9 @@ class ExamController extends Controller
         $grades = Grade::pluck('name', 'id');;
 
         return view('backend.exam.rule.add', compact('rule',
-            'combine_subject',
             'subject_id',
             'exam_id',
             'grade_id',
-            'passing_rule',
             'subjects',
             'exams',
             'grades'

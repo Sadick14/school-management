@@ -44,8 +44,7 @@
                                     <th width="5%">#</th>
                                     <th width="10%">Class</th>
                                     <th width="20%">Name</th>
-                                    <th width="10%">Elective Subject Point Above Addition</th>
-                                    <th width="30%">Marks Distribution Types</th>
+                                    <th width="15%">CA:Exam Weight</th>
                                     <th width="5%">Open For Marks Entry</th>
                                     <th width="10%">Status</th>
                                     <th class="notexport" width="10%">Action</th>
@@ -53,22 +52,13 @@
                                 </thead>
                                 <tbody>
                                 @foreach($exams as $exam)
-                                    @php
-                                        $marksDistributionTypes = json_decode($exam->marks_distribution_types,true);
-                                    @endphp
                                     <tr>
                                         <td>
                                             {{$loop->iteration}}
                                         </td>
                                         <td>{{ $exam->class->name }}</td>
                                         <td>{{ $exam->name }}</td>
-                                        <td>{{ $exam->elective_subject_point_addition }}</td>
-                                        <td>
-                                            @foreach($marksDistributionTypes as $type)
-                                                <span class="badge bg-light-blue">{{AppHelper::MARKS_DISTRIBUTION_TYPES[$type]}}</span>
-                                            @endforeach
-
-                                        </td>
+                                        <td>{{ $exam->ca_weight }}% : {{ 100 - $exam->ca_weight }}%</td>
                                         <td>
                                                 <input class="openEntryChange" type="checkbox" data-pk="{{$exam->id}}" @if($exam->open_for_marks_entry) checked @endif data-toggle="toggle" data-on="Yes" data-off="No" data-onstyle="success" data-offstyle="danger">
 
@@ -101,8 +91,7 @@
                                     <th width="5%">#</th>
                                     <th width="10%">Class</th>
                                     <th width="20%">Name</th>
-                                    <th width="10%">Elective Subject Point Above Addition</th>
-                                    <th width="30%">Marks Distribution Types</th>
+                                    <th width="15%">CA:Exam Weight</th>
                                     <th width="5%">Open For Marks Entry</th>
                                     <th width="10%">Status</th>
                                     <th class="notexport" width="10%">Action</th>

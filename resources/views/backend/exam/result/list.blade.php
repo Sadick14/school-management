@@ -88,8 +88,7 @@
                                                     <th>Section</th>
                                                 @endif
                                                 <th>Grade</th>
-                                                <th>Point</th>
-                                                <th>Total Marks</th>
+                                                <th>Average %</th>
                                                 <th class="notexport" width="10%">Action</th>
                                             </tr>
                                             </thead>
@@ -105,7 +104,6 @@
                                                     @endif
                                                     @if($student->result->first())
                                                     <td>{{$student->result->first()->grade}}</td>
-                                                    <td>{{$student->result->first()->point}}</td>
                                                     <td>{{$student->result->first()->total_marks}}</td>
                                                     <td width="10%">
                                                         <div class="btn-group">
@@ -113,7 +111,6 @@
                                                         </div>
                                                     </td>
                                                     @else
-                                                        <td></td>
                                                         <td></td>
                                                         <td></td>
                                                         <td>
@@ -134,8 +131,7 @@
                                                     <th>Section</th>
                                                 @endif
                                                 <th>Grade</th>
-                                                <th>Point</th>
-                                                <th>Total Marks</th>
+                                                <th>Average %</th>
                                                 <th class="notexport" width="5%">Action</th>
                                             </tr>
                                             </tfoot>

@@ -47,69 +47,30 @@
                                 <thead>
                                 <tr>
                                     <th width="5%">#</th>
-                                    <th width="10%">Subject</th>
-                                    <th width="10%">Grade</th>
-                                    <th width="10%">Combine Subject</th>
-                                    <th width="30%">Marks Distribution</th>
-                                    <th width="10%">Passing Rule</th>
-                                    <th width="5%">Total Marks</th>
-                                    <th width="5%">Pass Marks</th>
-                                    <th class="notexport" width="10%">Action</th>
+                                    <th width="15%">Subject</th>
+                                    <th width="15%">Grade</th>
+                                    <th width="15%">CA Total Marks</th>
+                                    <th width="15%">Exam Total Marks</th>
+                                    <th width="15%">Pass Mark (%)</th>
+                                    <th class="notexport" width="20%">Action</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 @foreach($rules as $rule)
-                                    @php
-                                        $distribution = json_decode($rule->marks_distribution);
-                                    @endphp
                                     <tr>
                                         <td>
                                             {{$loop->iteration}}
                                         </td>
                                         <td>{{ $rule->subject->name }}</td>
                                         <td>{{ $rule->grade->name }}</td>
-                                        <td>@if($rule->combineSubject){{ $rule->combineSubject->name }}@endif</td>
                                         <td>
-                                            <table class="table">
-                                                <thead>
-                                                <tr>
-                                                    <th>
-                                                        Type
-                                                    </th>
-                                                    <th>
-                                                        Total Marks
-                                                    </th>
-                                                    <th>
-                                                        Passing Marks
-                                                    </th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                @foreach($distribution as $dist)
-                                                    <tr>
-                                                        <td>
-                                                            {{AppHelper::MARKS_DISTRIBUTION_TYPES[$dist->type]}}
-                                                        </td>
-
-                                                        <td>
-                                                            {{$dist->total_marks}}
-                                                        </td>
-                                                        <td>
-                                                            {{$dist->pass_marks}}
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                                </tbody>
-                                            </table>
+                                            {{$rule->ca_total_marks}}
                                         </td>
                                         <td>
-                                            {{AppHelper::PASSING_RULES[$rule->passing_rule]}}
+                                            {{$rule->exam_total_marks}}
                                         </td>
                                         <td>
-                                            {{$rule->total_exam_marks}}
-                                        </td>
-                                        <td>
-                                            {{$rule->over_all_pass}}
+                                            {{$rule->pass_mark}}
                                         </td>
                                         <td>
                                             <div class="btn-group">
@@ -134,14 +95,12 @@
                                 <tfoot>
                                 <tr>
                                     <th width="5%">#</th>
-                                    <th width="10%">Subject</th>
-                                    <th width="10%">Grade</th>
-                                    <th width="10%">Combine Subject</th>
-                                    <th width="30%">Marks Distribution</th>
-                                    <th width="10%">Passing Rule</th>
-                                    <th width="5%">Total Marks</th>
-                                    <th width="5%">Pass Marks</th>
-                                    <th class="notexport" width="10%">Action</th>
+                                    <th width="15%">Subject</th>
+                                    <th width="15%">Grade</th>
+                                    <th width="15%">CA Total Marks</th>
+                                    <th width="15%">Exam Total Marks</th>
+                                    <th width="15%">Pass Mark (%)</th>
+                                    <th class="notexport" width="20%">Action</th>
                                 </tr>
                                 </tfoot>
                             </table>

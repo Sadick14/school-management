@@ -93,15 +93,10 @@
                                             <th>Student Name</th>
                                             <th>Regi No.</th>
                                             <th>Roll No.</th>
-                                            @php
-                                                $marksDistributions = json_decode($examRule->marks_distribution);
-                                            @endphp
-                                            @foreach($marksDistributions as $distribution)
-                                                <th>{{AppHelper::MARKS_DISTRIBUTION_TYPES[$distribution->type]}}</th>
-                                            @endforeach
-                                            <th>Total Marks</th>
+                                            <th>CA Marks</th>
+                                            <th>Exam Marks</th>
+                                            <th>Total %</th>
                                             <th>Grade</th>
-                                            <th>Point</th>
                                             <th>Status</th>
                                             <th class="notexport" width="5%">Action</th>
                                         </tr>
@@ -113,17 +108,10 @@
                                                     <td>{{$studentMark->student->info->name}}</td>
                                                     <td>{{$studentMark->student->regi_no}}</td>
                                                     <td>{{$studentMark->student->roll_no}}</td>
-                                                    @php
-                                                        $achivemarks = json_decode($studentMark->marks, true);
-                                                    @endphp
-                                                    @foreach($marksDistributions as $distribution)
-                                                        <td>
-                                                            {{$achivemarks[$distribution->type]}}
-                                                        </td>
-                                                    @endforeach
+                                                    <td>{{$studentMark->ca_marks}}</td>
+                                                    <td>{{$studentMark->exam_marks}}</td>
                                                     <td>{{$studentMark->total_marks}}</td>
                                                     <td>{{$studentMark->grade}}</td>
-                                                    <td>{{$studentMark->point}}</td>
                                                     <td>
                                                         @if($studentMark->present == 0)
                                                             <span class="badge bg-red">Absent</span>
@@ -148,12 +136,10 @@
                                             <th>Student Name</th>
                                             <th>Regi No.</th>
                                             <th>Roll No.</th>
-                                            @foreach($marksDistributions as $distribution)
-                                                <th>{{AppHelper::MARKS_DISTRIBUTION_TYPES[$distribution->type]}}</th>
-                                            @endforeach
-                                            <th>Total Marks</th>
+                                            <th>CA Marks</th>
+                                            <th>Exam Marks</th>
+                                            <th>Total %</th>
                                             <th>Grade</th>
-                                            <th>Point</th>
                                             <th>Status</th>
                                             <th class="notexport" width="5%">Action</th>
                                         </tr>

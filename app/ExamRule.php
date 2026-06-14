@@ -22,11 +22,9 @@ class ExamRule extends Model
         'subject_id',
         'exam_id',
         'grade_id',
-        'combine_subject_id',
-        'marks_distribution',
-        'passing_rule',
-        'total_exam_marks',
-        'over_all_pass',
+        'ca_total_marks',
+        'exam_total_marks',
+        'pass_mark',
     ];
 
     public function class()
@@ -36,11 +34,6 @@ class ExamRule extends Model
     public function exam()
     {
         return $this->belongsTo('App\Exam', 'exam_id');
-    }
-
-    public function combineSubject()
-    {
-        return $this->belongsTo('App\Subject', 'combine_subject_id');
     }
 
     public function subject()

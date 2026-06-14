@@ -60,7 +60,7 @@
                                                         Grade
                                                     </th>
                                                     <th>
-                                                        Point
+                                                        Remark
                                                     </th>
                                                     <th>
                                                         Marks From
@@ -78,7 +78,7 @@
                                                         </td>
 
                                                         <td>
-                                                            {{$rule->point}}
+                                                            {{AppHelper::GRADE_REMARKS[$rule->grade]}}
                                                         </td>
                                                         <td>
                                                             {{$rule->marks_from}}

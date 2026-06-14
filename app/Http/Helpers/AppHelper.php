@@ -322,26 +322,23 @@ class AppHelper
         5 => 'Special leave (SL)',
     ];
 
-    const MARKS_DISTRIBUTION_TYPES = [
-        1 => "Written",
-        2 => "MCQ",
-        3 => "SBA",
-        4 => "Attendance",
-        5 => "Assignment",
-        6 => "Lab Report",
-        7 => "Practical",
+    const GRADE_TYPES = [
+        1 => 'A',
+        2 => 'B',
+        3 => 'C',
+        4 => 'D',
+        5 => 'E',
+        6 => 'F',
     ];
 
-    const GRADE_TYPES = [
-        1 => 'A+',
-        2 => 'A',
-        3 => 'A-',
-        4 => 'B',
-        5 => 'C',
-        6 => 'D',
-        7 => 'F',
+    const GRADE_REMARKS = [
+        1 => 'Excellent',
+        2 => 'Very Good',
+        3 => 'Good',
+        4 => 'Credit',
+        5 => 'Pass',
+        6 => 'Fail',
     ];
-    const PASSING_RULES = [1 => 'Over All', 2 => 'Individual', 3 => 'Over All & Individual'];
 
 
     /**
@@ -827,172 +824,55 @@ class AppHelper
     }
 
     /**
-     * Process student entry marks and
-     * calculate grade point
+     * Calculate a subject's final weighted percentage from CA and Exam marks.
      *
-     * @param $examRule collection
-     * @param $gradingRules array
-     * @param $distributeMarksRules array
-     * @param $strudnetMarks array
+     * @param float $caMarks
+     * @param float $examMarks
+     * @param \App\ExamRule $examRule
+     * @param int $caWeight  (0-100, exam weight = 100 - caWeight)
+     * @return float  percentage 0-100 (ceiled)
      */
-    public static function processMarksAndCalculateResult($examRule, $gradingRules, $distributeMarksRules, $studentMarks)
+    public static function calculateSubjectPercent($caMarks, $examMarks, $examRule, $caWeight)
     {
-        $totalMarks = 0;
-        $isFail = false;
-        $isInvalid = false;
-        $message = "";
+        $caTotal = $examRule->ca_total_marks ?: 1;
+        $examTotal = $examRule->exam_total_marks ?: 1;
 
-        foreach ($studentMarks as $type => $marks) {
-            $marks = floatval($marks);
-            $totalMarks += $marks;
+        $caPercent = (floatval($caMarks) / $caTotal) * 100;
+        $examPercent = (floatval($examMarks) / $examTotal) * 100;
 
-            // AppHelper::PASSING_RULES
-            if (in_array($examRule->passing_rule, [2, 3])) {
-                if ($marks > $distributeMarksRules[$type]['total_marks']) {
-                    $isInvalid = true;
-                    $message = AppHelper::MARKS_DISTRIBUTION_TYPES[$type] . " marks is too high from exam rules marks distribution!";
-                    break;
-                }
+        $totalPercent = ceil(
+            ($caPercent * $caWeight / 100) + ($examPercent * (100 - $caWeight) / 100)
+        );
 
-                if ($marks < $distributeMarksRules[$type]['pass_marks']) {
-                    $isFail = true;
-                }
-            }
+        if ($totalPercent < 0) {
+            $totalPercent = 0;
+        }
+        if ($totalPercent > 100) {
+            $totalPercent = 100;
         }
 
-        //fraction number make ceiling
-        $totalMarks = ceil($totalMarks);
-
-        // AppHelper::PASSING_RULES
-        if (in_array($examRule->passing_rule, [1, 3])) {
-            if ($totalMarks < $examRule->over_all_pass) {
-                $isFail = true;
-            }
-        }
-
-        if ($isFail) {
-            $grade = 'F';
-            $point = 0.00;
-
-            return [$isInvalid, $message, $totalMarks, $grade, $point];
-        }
-
-        [$grade, $point] = AppHelper::findGradePointFromMarks($gradingRules, $totalMarks);
-
-        return [$isInvalid, $message, $totalMarks, $grade, $point];
+        return $totalPercent;
     }
 
-    public static function findGradePointFromMarks($gradingRules, $marks)
-    {
-        $grade = 'F';
-        $point = 0.00;
-        foreach ($gradingRules as $rule) {
-            if ($marks >= $rule->marks_from && $marks <= $rule->marks_upto) {
-                $grade = AppHelper::GRADE_TYPES[$rule->grade];
-                $point = $rule->point;
-                break;
-            }
-        }
-        return [$grade, $point];
-    }
-
-    public static function findGradeFromPoint($point, $gradingRules)
+    /**
+     * Find grade letter from a percentage using grading rules.
+     *
+     * @param float $percent
+     * @param array $gradingRules  decoded Grade.rules JSON (array of {grade, marks_from, marks_upto})
+     * @return string grade letter, default 'F'
+     */
+    public static function findGradeFromPercent($percent, $gradingRules)
     {
         $grade = 'F';
 
         foreach ($gradingRules as $rule) {
-            if ($point >= floatval($rule->point)) {
+            if ($percent >= $rule->marks_from && $percent <= $rule->marks_upto) {
                 $grade = AppHelper::GRADE_TYPES[$rule->grade];
                 break;
             }
         }
 
         return $grade;
-    }
-
-    public static function isAndInCombine($subject_id, $rules)
-    {
-        $isCombine = false;
-        foreach ($rules as $subject => $data) {
-            if ($subject == $subject_id && $data['combine_subject_id']) {
-                $isCombine = true;
-                break;
-            }
-
-            if ($data['combine_subject_id'] == $subject_id) {
-                $isCombine = true;
-                break;
-            }
-        }
-
-        return $isCombine;
-    }
-
-    public static function processCombineSubjectMarks($subjectMarks, $pairSubjectMarks, $subjectRule, $pairSubjectRule)
-    {
-        $pairFail = false;
-
-        $combineTotalMarks = ($subjectMarks->total_marks + $pairSubjectMarks->total_marks);
-
-        if ($subjectRule['total_exam_marks'] == $pairSubjectRule['total_exam_marks']) {
-            //dividing factor
-            $totalMarks = ($combineTotalMarks / 2);
-        } else {
-            //if both subject exam marks not same then it must be 2:1 ratio
-            //Like: subject marks 100 pair subject marks 50
-            $totalMarks = ($combineTotalMarks / 1.5);
-        }
-
-        //fraction number make ceiling
-        $totalMarks = ceil($totalMarks);
-
-        $passingRule = $subjectRule['passing_rule'];
-        // AppHelper::PASSING_RULES
-        if (in_array($passingRule, [1, 3])) {
-            if ($totalMarks < $subjectRule['over_all_pass']) {
-                $pairFail = true;
-            }
-        }
-
-        //if any subject absent then its fail
-        if ($subjectMarks->present == 0 || $pairSubjectMarks->present == 0) {
-            $pairFail = true;
-        }
-
-        // AppHelper::PASSING_RULES
-        if (!$pairFail && in_array($passingRule, [2, 3])) {
-
-            //acquire marks
-            $combineDistributedMarks = [];
-            foreach (json_decode($subjectMarks->marks) as $key => $distMarks) {
-                $combineDistributedMarks[$key] = floatval($distMarks);
-            }
-
-            foreach (json_decode($pairSubjectMarks->marks) as $key => $distMarks) {
-                $combineDistributedMarks[$key] += floatval($distMarks);
-            }
-
-
-            //passing rules marks
-            $combineDistributeMarks = [];
-            foreach ($subjectRule['marks_distribution'] as $distMarks) {
-                $combineDistributeMarks[$distMarks->type] = floatval($distMarks->pass_marks);
-            }
-
-            foreach ($pairSubjectRule['marks_distribution'] as $key => $distMarks) {
-                $combineDistributeMarks[$distMarks->type] += floatval($distMarks->pass_marks);
-            }
-
-            //now check for pass
-            foreach ($combineDistributeMarks as $key => $value) {
-                if ($combineDistributedMarks[$key] < $value) {
-                    $pairFail = true;
-                }
-            }
-        }
-
-
-        return [$pairFail, $combineTotalMarks, $totalMarks];
     }
 
     public static function getHouseList() {

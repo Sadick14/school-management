@@ -20,8 +20,7 @@ class Exam extends Model
     protected $fillable = [
         'class_id',
         'name',
-        'elective_subject_point_addition',
-        'marks_distribution_types',
+        'ca_weight',
         'status',
         'open_for_marks_entry'
     ];

@@ -24,7 +24,6 @@ class Result extends Model
         'exam_id',
         'total_marks',
         'grade',
-        'point',
         'subject_fail_count',
     ];
 

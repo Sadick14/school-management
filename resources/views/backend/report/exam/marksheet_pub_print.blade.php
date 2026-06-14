@@ -35,12 +35,10 @@
                             <th width="3%">SL</th>
                             <th>Code</th>
                             <th>Sub Name</th>
-                            @foreach($marksDistributionTypes as $type)
-                            <th>{{AppHelper::MARKS_DISTRIBUTION_TYPES[$type]}}</th>
-                            @endforeach
+                            <th>CA Marks</th>
+                            <th>Exam Marks</th>
                             <th>Highest</th>
-                            <th>Total</th>
-                            <th>Point</th>
+                            <th>Total %</th>
                             <th>Grade</th>
                         </tr>
                         </thead>
@@ -50,16 +48,10 @@
                                 <td>{{$loop->iteration}}</td>
                                 <td>{{$subjectMarks['code']}}</td>
                                 <td>{{$subjectMarks['name']}}</td>
-                                @foreach($marksDistributionTypes as $type)
-                                    @if(isset($subjectWiseMarksDistributionTypeEmptyList[$subjectMarks['id']][$type]))
-                                        <td>-</td>
-                                    @else
-                                        <td>{{$subjectMarks['marks'][$type]}}</td>
-                                    @endif
-                                @endforeach
+                                <td>{{$subjectMarks['ca_marks']}}</td>
+                                <td>{{$subjectMarks['exam_marks']}}</td>
                                 <td><b>{{$subjectMarks['highest_marks']}}</b></td>
                                 <td><b>{{$subjectMarks['total_marks']}}</b></td>
-                                <td><b>{{$subjectMarks['point']}}</b></td>
                                 <td><b>{{$subjectMarks['grade']}}</b></td>
                             </tr>
                         @endforeach
@@ -67,9 +59,8 @@
                         <tfoot>
                         <tr>
                             <th>&nbsp;</th>
-                            <th class="text-bold" style="text-align: right;" colspan="{{count($marksDistributionTypes)+3}}">Total Marks &amp; GPA</th>
+                            <th class="text-bold" style="text-align: right;" colspan="5">Overall Total %</th>
                             <th class="text-bold">{{$result->total_marks}}</th>
-                            <th class="text-bold">@if($result->grade != "F") {{$result->point}} @else 0.00 @endif</th>
                             <th class="text-bold">{{$result->grade}}</th>
                         </tr>
                         </tfoot>

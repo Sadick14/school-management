@@ -99,19 +99,15 @@
                                         <input type="hidden" name="exam_id" value="{{$exam_id}}">
                                         @csrf
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-striped list_view_table display responsive no-wrap haveForm" width="100%">
+                                            <table class="table table-bordered table-striped list_view_table display responsive no-wrap haveForm" width="100%" data-ca-weight="{{$examInfo->ca_weight}}">
                                                 <thead>
                                                 <tr>
                                                     <th>#</th>
                                                     <th>Student Name</th>
                                                     <th>Roll No.</th>
-                                                    @php
-                                                        $marksDistributions = json_decode($examRule->marks_distribution);
-                                                    @endphp
-                                                    @foreach($marksDistributions as $distribution)
-                                                        <th>{{AppHelper::MARKS_DISTRIBUTION_TYPES[$distribution->type]}}</th>
-                                                    @endforeach
-                                                    <th>Total Marks</th>
+                                                    <th>CA Marks (out of {{$examRule->ca_total_marks}})</th>
+                                                    <th>Exam Marks (out of {{$examRule->exam_total_marks}})</th>
+                                                    <th>Total %</th>
                                                     <th>Absent</th>
                                                 </tr>
                                                 </thead>
@@ -128,11 +124,12 @@
                                                         <td>
                                                             {{$student->roll_no}}
                                                         </td>
-                                                        @foreach($marksDistributions as $distribution)
-                                                            <td>
-                                                                <input type="number" class="form-control" name="type[{{$student->id}}][{{$distribution->type}}]" value="" required max="{{$distribution->total_marks}}" min="0">
-                                                            </td>
-                                                        @endforeach
+                                                        <td>
+                                                            <input type="number" class="form-control ca-marks-input" name="ca_marks[{{$student->id}}]" value="" required max="{{$examRule->ca_total_marks}}" min="0">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" class="form-control exam-marks-input" name="exam_marks[{{$student->id}}]" value="" required max="{{$examRule->exam_total_marks}}" min="0">
+                                                        </td>
                                                         <td>
                                                             <input type="text" readonly class="form-control totalMarks" value="0">
                                                         </td>
@@ -149,10 +146,9 @@
                                                     <th>#</th>
                                                     <th>Student Name</th>
                                                     <th>Roll No.</th>
-                                                    @foreach($marksDistributions as $distribution)
-                                                        <th>{{AppHelper::MARKS_DISTRIBUTION_TYPES[$distribution->type]}}</th>
-                                                    @endforeach
-                                                    <th>Total Marks</th>
+                                                    <th>CA Marks (out of {{$examRule->ca_total_marks}})</th>
+                                                    <th>Exam Marks (out of {{$examRule->exam_total_marks}})</th>
+                                                    <th>Total %</th>
                                                     <th>Absent</th>
                                                 </tr>
                                                 </tfoot>

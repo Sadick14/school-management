@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Backend;
 use App\AcademicYear;
 use App\Employee;
 use App\Exam;
-use App\ExamRule;
 use App\Http\Helpers\AppHelper;
 use App\Http\Helpers\ReportHelper;
 use App\IClass;
@@ -303,7 +302,7 @@ class ReportController extends Controller
 
             $exam = Exam::where('id', $examId)
                 ->where('class_id', $classId)
-                ->select('id','name','marks_distribution_types')
+                ->select('id','name','ca_weight')
                 ->first();
 
             if(!$exam){
@@ -353,7 +352,7 @@ class ReportController extends Controller
             $result =  Result::where('class_id', $request->get('class_id'))
                 ->where('registration_id', $student->id)
                 ->where('exam_id', $exam->id)
-                ->select('registration_id','grade', 'point', 'total_marks')
+                ->select('registration_id','grade','total_marks')
                 ->first();
             $result->published_at = Carbon::createFromFormat('Y-m-d', $publishedResult->publish_date)
                 ->format('d/m/Y');
@@ -379,7 +378,7 @@ class ReportController extends Controller
                 ->where('marks.academic_year_id', $student->acYear->id)
                 ->where('marks.class_id', $classId)
                 ->where('marks.exam_id', $exam->id)
-                ->select('subject_id','marks','total_marks','grade','point','present','subjects.name as subject_name',
+                ->select('subject_id','ca_marks','exam_marks','total_marks','grade','present','subjects.name as subject_name',
                     'subjects.type as subject_type','subjects.code as subject_code','subjects.order as order')
                 ->orderBy('order','asc')
                 ->get();
@@ -390,33 +389,13 @@ class ReportController extends Controller
                     'id' => $marks->subject_id,
                     'code' => $marks->subject_code,
                     'name' => $marks->subject_name,
-                    'marks' => json_decode($marks->marks, true),
+                    'ca_marks' => $marks->ca_marks,
+                    'exam_marks' => $marks->exam_marks,
                     'highest_marks' => $subjectWiseHighestMarks[$marks->subject_id],
                     'total_marks' => $marks->total_marks,
                     'grade' => $marks->grade,
-                    'point' => $marks->point
                 ];
             }
-
-
-            //marks distribution types
-            $marksDistributionTypes = json_decode($exam->marks_distribution_types, true);
-            $subjectWiseMarksDistributionTypeEmptyList = ExamRule::where('exam_id', $exam->id)
-                ->select('subject_id', 'marks_distribution')
-                ->get()
-                ->reduce(function ($subjectWiseMarksDistributionTypeEmptyList, $rule) {
-
-                    $emptyList = [];
-                    foreach (json_decode($rule->marks_distribution) as $distribution) {
-                        if($distribution->total_marks == 0) {
-                            $emptyList[$distribution->type] = 0;
-                        }
-                    }
-
-                    $subjectWiseMarksDistributionTypeEmptyList[$rule->subject_id] = $emptyList;
-
-                    return $subjectWiseMarksDistributionTypeEmptyList;
-                });
 
 
             // report settings
@@ -430,8 +409,6 @@ class ReportController extends Controller
             return view('backend.report.exam.marksheet_pub_print', compact(
                 'headerData',
                 'exam',
-                'marksDistributionTypes',
-                'subjectWiseMarksDistributionTypeEmptyList',
                 'student',
                 'coreSubjectsMarks',
                 'result'

@@ -228,32 +228,26 @@ class PublicController extends Controller
                 ->whereIn('id', $publishedExams)
                 ->with(['marks' => function($q) use($student){
                     $q->where('registration_id', $student->id)
-                        ->select('registration_id','exam_id','subject_id','marks','total_marks','grade','point')
+                        ->select('registration_id','exam_id','subject_id','ca_marks','exam_marks','total_marks','grade')
                         ->with(['subject' => function($q) {
                             $q->select('name','code','id');
                         }]);
                 }])
                 ->with(['result' => function($q) use($student){
                     $q->where('registration_id', $student->id)
-                        ->select('registration_id','exam_id','total_marks','grade','point');
+                        ->select('registration_id','exam_id','total_marks','grade');
                 }])
-                ->select('name','id','marks_distribution_types')
+                ->select('name','id','ca_weight')
                 ->orderBy('id','asc')
                 ->get();
 
             $examWithResults = [];
 
             foreach ($examsData as $datum) {
-                $marksDistribution = [];
-                foreach (json_decode($datum->marks_distribution_types) as $mdtypes){
-                    $marksDistribution[$mdtypes] = AppHelper::MARKS_DISTRIBUTION_TYPES[$mdtypes];
-                }
-
                 $examWithResults[] = [
                     'exam' => $datum->name,
                     'marks' => $datum->marks,
                     'result' => $datum->result->first(),
-                    'marks_distribution' => $marksDistribution
                 ];
             }
 

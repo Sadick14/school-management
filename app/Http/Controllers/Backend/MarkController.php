@@ -89,7 +89,7 @@ class MarkController extends Controller
                 ->where('section_id', $section_id)
                 ->where('subject_id', $subject_id)
                 ->where('exam_id', $exam_id)
-                ->select( 'registration_id', 'marks', 'total_marks', 'grade', 'point', 'present','id')
+                ->select( 'registration_id', 'ca_marks', 'exam_marks', 'total_marks', 'grade', 'present','id')
                 ->get()
                 ->sortBy('student.roll_no');
 
@@ -197,6 +197,7 @@ class MarkController extends Controller
         $academic_years = [];
         $subjects = [];
         $examRule = null;
+        $examInfo = null;
         $exams = [];
 
         if ($request->isMethod('post')) {
@@ -315,7 +316,8 @@ class MarkController extends Controller
             'subjects',
             'academic_years',
             'exams',
-            'examRule'
+            'examRule',
+            'examInfo'
         ));
     }
 
@@ -335,7 +337,8 @@ class MarkController extends Controller
             'subject_id' => 'required|integer',
             'exam_id' => 'required|integer',
             'registrationIds' => 'required|array',
-            'marks_type' => 'required|array',
+            'ca_marks' => 'required|array',
+            'exam_marks' => 'required|array',
             'absent' => 'nullable|array',
         ];
 
@@ -388,16 +391,8 @@ class MarkController extends Controller
         }
         $gradingRules = json_decode($grade->rules);
 
-        //exam distributed marks rules
-        $distributeMarksRules = [];
-        foreach (json_decode($examRule->marks_distribution) as $rule){
-            $distributeMarksRules[$rule->type] = [
-                'total_marks' => $rule->total_marks,
-                'pass_marks' => $rule->pass_marks
-            ];
-        }
-
-        $distributedMarks = $request->get('marks_type');
+        $caMarksInput = $request->get('ca_marks');
+        $examMarksInput = $request->get('exam_marks');
         $absent = $request->get('absent');
         $timeStampNow = Carbon::now(env('APP_TIMEZONE', 'Africa/Accra'));
         $userId = auth()->user()->id;
@@ -406,16 +401,24 @@ class MarkController extends Controller
         $isInvalid = false;
         $message = '';
 
-        foreach ($request->get('registrationIds') as $student){
-            $marks = $distributedMarks[$student];
-            [$isInvalid, $message, $totalMarks, $grade, $point, $typeWiseMarks] = $this->processMarksAndCalculateResult(
-                $examRule,
-                $gradingRules,
-                $distributeMarksRules,
-                $marks);
+        foreach ($request->get('registrationIds') as $student) {
+            $caMarks = floatval($caMarksInput[$student] ?? 0);
+            $examMarks = floatval($examMarksInput[$student] ?? 0);
 
-            if($isInvalid){
+            if ($caMarks > $examRule->ca_total_marks || $examMarks > $examRule->exam_total_marks) {
+                $isInvalid = true;
+                $message = "Marks entered are higher than the exam rule's CA/Exam total marks!";
                 break;
+            }
+
+            $isPresent = isset($absent[$student]) ? '0' : '1';
+
+            if ($isPresent == '0') {
+                $totalPercent = 0;
+                $grade = 'F';
+            } else {
+                $totalPercent = AppHelper::calculateSubjectPercent($caMarks, $examMarks, $examRule, $examInfo->ca_weight);
+                $grade = AppHelper::findGradeFromPercent($totalPercent, $gradingRules);
             }
 
             $data = [
@@ -425,11 +428,11 @@ class MarkController extends Controller
                 'registration_id' => $student,
                 'exam_id' => $exam_id,
                 'subject_id' => $subject_id,
-                'marks' => json_encode($typeWiseMarks),
-                'total_marks' => $totalMarks,
+                'ca_marks' => $caMarks,
+                'exam_marks' => $examMarks,
+                'total_marks' => $totalPercent,
                 'grade' => $grade,
-                'point' => $point,
-                'present' => isset($absent[$student]) ? '0' : '1',
+                'present' => $isPresent,
                 "created_at" => $timeStampNow,
                 "created_by" => $userId,
             ];
@@ -471,97 +474,6 @@ class MarkController extends Controller
 
 
     /**
-     * Process student entry marks and
-     * calculate grade point
-     *
-     * @param $examRule collection
-     * @param $gradingRules array
-     * @param $distributeMarksRules array
-     * @param $strudnetMarks array
-     */
-    private function processMarksAndCalculateResult($examRule, $gradingRules, $distributeMarksRules, $studentMarks) {
-        $totalMarks = 0;
-        $isFail = false;
-        $isInvalid = false;
-        $message = "";
-        $typeWiseMarks = [];
-
-        foreach ($distributeMarksRules as $type => $marksRule){
-            if(!isset($studentMarks[$type])){
-                $typeWiseMarks[$type] = 0;
-                continue;
-            }
-
-            $marks = floatval($studentMarks[$type]);
-            $typeWiseMarks[$type] = $marks;
-            $totalMarks += $marks;
-
-            // AppHelper::PASSING_RULES
-            if(in_array($examRule->passing_rule, [2,3])){
-                if($marks > $marksRule['total_marks']){
-                    $isInvalid = true;
-                    $message = AppHelper::MARKS_DISTRIBUTION_TYPES[$type]. " marks is too high from exam rules marks distribution!";
-                    break;
-                }
-
-                if($marks < $marksRule['pass_marks']){
-                    $isFail = true;
-                }
-            }
-        }
-
-        //fraction number make ceiling
-        $totalMarks = ceil($totalMarks);
-
-        // AppHelper::PASSING_RULES
-        if(in_array($examRule->passing_rule, [1,3])){
-            if($totalMarks < $examRule->over_all_pass){
-                $isFail = true;
-            }
-        }
-
-        if($isFail){
-            $grade = 'F';
-            $point = 0.00;
-
-            return [$isInvalid, $message, $totalMarks, $grade, $point, $typeWiseMarks];
-        }
-
-        [$grade, $point] = $this->findGradePointFromMarks($gradingRules, $totalMarks);
-
-        return [$isInvalid, $message, $totalMarks, $grade, $point, $typeWiseMarks];
-
-    }
-
-    private function findGradePointFromMarks($gradingRules, $marks) {
-        $grade = 'F';
-        $point = 0.00;
-        foreach ($gradingRules as $rule){
-            if ($marks >= $rule->marks_from && $marks <= $rule->marks_upto){
-                $grade = AppHelper::GRADE_TYPES[$rule->grade];
-                $point = $rule->point;
-                break;
-            }
-        }
-        return [$grade, $point];
-    }
-
-    private function findGradeFromPoint($point, $gradingRules) {
-        $grade = 'F';
-
-        foreach ($gradingRules as $rule){
-            if($point >= floatval($rule->point)){
-                $grade = AppHelper::GRADE_TYPES[$rule->grade];
-                break;
-            }
-        }
-
-        return $grade;
-
-    }
-
-
-    /**
      * Show the form for editing the specified resource.
      *
      * @param  $id integer
@@ -575,7 +487,7 @@ class MarkController extends Controller
                 }])->select('regi_no','student_id','roll_no','id');
             }])
             ->where('id',$id)
-            ->select( 'id','academic_year_id','class_id','subject_id','exam_id','registration_id', 'marks', 'total_marks', 'present')
+            ->select( 'id','academic_year_id','class_id','subject_id','exam_id','registration_id', 'ca_marks', 'exam_marks', 'total_marks', 'present')
             ->first();
 
         if(!$marks){
@@ -611,9 +523,11 @@ class MarkController extends Controller
             return redirect()->route('marks.index')->with('error', 'Exam rules not found for this subject and exam!');
         }
 
+        $examInfo = Exam::where('id', $marks->exam_id)->first();
 
         return view('backend.exam.marks.edit', compact('marks',
-            'examRule'
+            'examRule',
+            'examInfo'
         ));
 
 
@@ -674,7 +588,8 @@ class MarkController extends Controller
         }
 
         $validateRules = [
-            'type' => 'required|array',
+            'ca_marks' => 'required|numeric',
+            'exam_marks' => 'required|numeric',
             'absent' => 'nullable',
         ];
 
@@ -687,29 +602,30 @@ class MarkController extends Controller
         }
         $gradingRules = json_decode($grade->rules);
 
-        //exam distributed marks rules
-        $distributeMarksRules = [];
-        foreach (json_decode($examRule->marks_distribution) as $rule){
-            $distributeMarksRules[$rule->type] = [
-                'total_marks' => $rule->total_marks,
-                'pass_marks' => $rule->pass_marks
-            ];
+        $caMarks = floatval($request->get('ca_marks'));
+        $examMarks = floatval($request->get('exam_marks'));
+
+        if ($caMarks > $examRule->ca_total_marks || $examMarks > $examRule->exam_total_marks) {
+            return redirect()->back()->with('error', "Marks entered are higher than the exam rule's CA/Exam total marks!");
         }
 
+        $isPresent = $request->has('absent') ? '0' : '1';
+        $examInfo = Exam::where('id', $marks->exam_id)->first();
 
-        [$isInvalid, $message, $totalMarks, $grade, $point, $typeWiseMarks] = $this->processMarksAndCalculateResult($examRule,
-            $gradingRules, $distributeMarksRules, $request->get('type'));
-
-        if($isInvalid){
-            return redirect()->back()->with('error', $message);
+        if ($isPresent == '0') {
+            $totalPercent = 0;
+            $grade = 'F';
+        } else {
+            $totalPercent = AppHelper::calculateSubjectPercent($caMarks, $examMarks, $examRule, $examInfo->ca_weight);
+            $grade = AppHelper::findGradeFromPercent($totalPercent, $gradingRules);
         }
 
         $data = [
-            'marks' => json_encode($typeWiseMarks),
-            'total_marks' => $totalMarks,
+            'ca_marks' => $caMarks,
+            'exam_marks' => $examMarks,
+            'total_marks' => $totalPercent,
             'grade' => $grade,
-            'point' => $point,
-            'present' => $request->has('absent') ? '0' : '1',
+            'present' => $isPresent,
         ];
 
         $marks->fill($data);
@@ -772,7 +688,7 @@ class MarkController extends Controller
                 })
                 ->select('id','student_id','regi_no','roll_no','section_id')
                 ->with(['result' => function($query) use($exam_id){
-                    $query->select('registration_id','total_marks','grade', 'point')
+                    $query->select('registration_id','total_marks','grade')
                         ->where('exam_id', $exam_id);
                 }])
                 ->with(['info' => function($query){
@@ -926,22 +842,17 @@ class MarkController extends Controller
                 return redirect()->back()->with('error', 'Exam Not Found');
             }
 
-            // pull exam rules subject wise and find combine subject
+            // pull exam rules subject wise
             $examRules = ExamRule::where('class_id', $class_id)
                 ->where('exam_id', $examInfo->id)
-                ->select('subject_id','combine_subject_id','passing_rule','marks_distribution','total_exam_marks','over_all_pass')
+                ->select('subject_id','pass_mark')
                 ->with(['subject' => function($query){
-                    $query->select('id','type','exclude_in_result');
+                    $query->select('id','exclude_in_result');
                 }])
                 ->get()
                 ->reduce(function ($examRules, $rule){
-                    $examRules[$rule->subject_id] =[
-                        'combine_subject_id' => $rule->combine_subject_id,
-                        'passing_rule' => $rule->passing_rule,
-                        'marks_distribution' => json_decode($rule->marks_distribution),
-                        'total_exam_marks' => $rule->total_exam_marks,
-                        'over_all_pass' => $rule->over_all_pass,
-                        'subject_type' => $rule->subject->getOriginal('type'),
+                    $examRules[$rule->subject_id] = [
+                        'pass_mark' => $rule->pass_mark,
                         'exclude_in_result' => $rule->subject->exclude_in_result,
                     ];
                     return $examRules;
@@ -954,7 +865,7 @@ class MarkController extends Controller
                 ->where('class_id', $class_id)
                 ->select('id','roll_no','regi_no')
                 ->with(['marks' => function($query) use($acYear,$class_id,$exam_id){
-                    $query->select('registration_id','subject_id','marks', 'total_marks', 'point', 'present')
+                    $query->select('registration_id','subject_id','total_marks','present')
                         ->where('academic_year_id', $acYear)
                         ->where('class_id', $class_id)
                         ->where('exam_id', $exam_id);
@@ -965,18 +876,14 @@ class MarkController extends Controller
             $isDataMissing = false;
             $marksMissingStudentInfo = 0;
             $resultInsertData = [];
-            $combineResultInsertData = [];
             $gradingRules = json_decode($grade->rules);
             $userId = auth()->user()->id;
 
             //loop  the students
             foreach ($students as $student){
                 try {
-                    $totalMarks = 0;
-                    $totalPoint = 0;
+                    $totalPercentSum = 0;
                     $totalSubject = 0;
-                    $combineSubjectsMarks = [];
-                    $isFail = false;
                     $subjectFailCount = 0;
 
                     //student have in this exam or not
@@ -999,87 +906,16 @@ class MarkController extends Controller
                             continue;
                         }
 
+                        $totalPercentSum += $marks->total_marks;
+                        $totalSubject++;
 
-                        //find combine subjects
-                        $isAndInCombineSubject = $this->isAndInCombine($marks->subject_id, $examRules);
-                        if ($isAndInCombineSubject) {
-                            $combineSubjectsMarks[$marks->subject_id] = $marks;
-
-                            //skip for next subject
-                            continue;
-                        }
-
-                        //find 4th subject AppHelper::SUBJECT_TYPE
-                        $is4thSubject = ($studentSubjects[$marks->subject_id] == 2) ? 1 : 0;
-                        if ($is4thSubject) {
-                            if($marks->point >= $examInfo->elective_subject_point_addition) {
-                                $totalPoint += ($marks->point - $examInfo->elective_subject_point_addition);
-                            }
-                            $totalMarks += $marks->total_marks;
-
-                            //skip for next subject
-                            continue;
-                        }
-
-                        //process not combine and 4th subjects
-                        if (!$isAndInCombineSubject && !$is4thSubject) {
-
-                            $totalMarks += $marks->total_marks;
-                            $totalPoint += $marks->point;
-                            $totalSubject++;
-                            if (intval($marks->point) == 0) {
-                                $isFail = true;
-                                $subjectFailCount++;
-                            }
-
+                        if ($marks->total_marks < $examRules[$marks->subject_id]['pass_mark']) {
+                            $subjectFailCount++;
                         }
                     }
 
-
-                    //now process combine subjects
-                    foreach ($examRules as $subject_id => $data) {
-                        if ($data['combine_subject_id'] != null) {
-                            $totalSubject++;
-                            $subjectMarks = $combineSubjectsMarks[$subject_id];
-                            $pairSubjectMarks = $combineSubjectsMarks[$data['combine_subject_id']];
-
-                            [$pairFail, $combineTotalMarks, $pairTotalMarks] = $this->processCombineSubjectMarks($subjectMarks, $pairSubjectMarks, $data, $examRules[$data['combine_subject_id']]);
-
-                            $totalMarks += $combineTotalMarks;
-
-                            if ($pairFail) {
-                                //AppHelper::GRADE_TYPES
-                                $pairGrade = "F";
-                                $pairPoint = 0.00;
-                                $isFail = true;
-                                $subjectFailCount++;
-                            } else {
-
-                                [$pairGrade, $pairPoint] = $this->findGradePointFromMarks($gradingRules, $pairTotalMarks);
-                                $totalPoint += $pairPoint;
-                            }
-
-                            //need to store in db for marks sheet print
-                            $combineResultInsertData[] = [
-                                'registration_id' => $student->id,
-                                'subject_id' => $subject_id,
-                                'exam_id' => $examInfo->id,
-                                'total_marks' => $combineTotalMarks,
-                                'grade' => $pairGrade,
-                                'point' => $pairPoint,
-                            ];
-
-                        }
-                    }
-
-
-                    $finalPoint = ($totalPoint / $totalSubject);
-                    if ($isFail) {
-                        //AppHelper::GRADE_TYPES
-                        $finalGrade = 'F';
-                    } else {
-                        $finalGrade = $this->findGradeFromPoint($finalPoint, $gradingRules);
-                    }
+                    $overallPercent = $totalSubject ? ceil($totalPercentSum / $totalSubject) : 0;
+                    $overallGrade = AppHelper::findGradeFromPercent($overallPercent, $gradingRules);
 
                     $timeStampNow = Carbon::now(env('APP_TIMEZONE', 'Africa/Accra'));
                     $resultInsertData[] = [
@@ -1087,9 +923,8 @@ class MarkController extends Controller
                         'class_id' => $class_id,
                         'registration_id' => $student->id,
                         'exam_id' => $examInfo->id,
-                        'total_marks' => $totalMarks,
-                        'grade' => $finalGrade,
-                        'point' => $finalPoint,
+                        'total_marks' => $overallPercent,
+                        'grade' => $overallGrade,
                         'subject_fail_count' => $subjectFailCount,
                         "created_at" => $timeStampNow,
                         "created_by" => $userId,
@@ -1129,7 +964,6 @@ class MarkController extends Controller
                     'exam_id' => $exam_id,
                     'publish_date' => $publish_date->format('Y-m-d')
                 ]);
-                DB::table('result_combines')->insert($combineResultInsertData);
                 DB::commit();
             }
             catch(\Exception $e){
@@ -1156,96 +990,6 @@ class MarkController extends Controller
         return view('backend.exam.result.generate', compact('classes', 'academic_years','exams'));
     }
 
-
-    private function isAndInCombine($subject_id, $rules){
-        $isCombine = false;
-        foreach ($rules as $subject => $data){
-            if($subject == $subject_id && $data['combine_subject_id']){
-                $isCombine = true;
-                break;
-            }
-
-            if($data['combine_subject_id'] == $subject_id){
-                $isCombine = true;
-                break;
-            }
-        }
-
-        return $isCombine;
-    }
-
-
-    private function processCombineSubjectMarks($subjectMarks, $pairSubjectMarks, $subjectRule, $pairSubjectRule){
-        $pairFail = false;
-
-        $combineTotalMarks = ($subjectMarks->total_marks + $pairSubjectMarks->total_marks);
-
-        if($subjectRule['total_exam_marks'] == $pairSubjectRule['total_exam_marks']){
-            //dividing factor
-            $totalMarks = ($combineTotalMarks/2);
-        }
-        else{
-            //if both subject exam marks not same then it must be 2:1 ratio
-            //Like: subject marks 100 pair subject marks 50
-            $totalMarks = ($combineTotalMarks/ 1.5);
-        }
-
-        //fraction number make ceiling
-        $totalMarks = ceil($totalMarks);
-
-        $passingRule = $subjectRule['passing_rule'];
-        // AppHelper::PASSING_RULES
-        if(in_array($passingRule, [1,3])){
-            if($totalMarks < $subjectRule['over_all_pass']){
-                $pairFail = true;
-            }
-        }
-
-        //if any subject absent then its fail
-        if($subjectMarks->present == 0 || $pairSubjectMarks->present == 0){
-            $pairFail = true;
-        }
-
-        // AppHelper::PASSING_RULES
-        if(!$pairFail && in_array($passingRule, [2,3])){
-
-            //acquire marks
-            $combineDistributedMarks = [];
-            foreach (json_decode($subjectMarks->marks) as $key => $distMarks){
-                $combineDistributedMarks[$key] = floatval($distMarks);
-
-            }
-
-            foreach (json_decode($pairSubjectMarks->marks) as $key => $distMarks){
-                $combineDistributedMarks[$key] += floatval($distMarks);
-
-            }
-
-
-            //passing rules marks
-            $combineDistributeMarks = [];
-            foreach ($subjectRule['marks_distribution'] as $distMarks){
-                $combineDistributeMarks[$distMarks->type] = floatval($distMarks->pass_marks);
-            }
-
-            foreach ($pairSubjectRule['marks_distribution'] as $key => $distMarks){
-                $combineDistributeMarks[$distMarks->type] += floatval($distMarks->pass_marks);
-
-            }
-
-            //now check for pass
-            foreach ($combineDistributeMarks as $key => $value){
-                if($combineDistributedMarks[$key] < $value){
-                    $pairFail = true;
-                }
-            }
-
-        }
-
-
-        return [$pairFail, $combineTotalMarks, $totalMarks];
-
-    }
 
     /**
      * Published Result Delete
@@ -1294,11 +1038,6 @@ class MarkController extends Controller
             DB::beginTransaction();
             try {
 
-                $studentIds = Result::where('academic_year_id', $acYear)
-                    ->where('class_id', $class_id)
-                    ->where('exam_id', $exam_id)
-                    ->pluck('registration_id');
-
                 DB::table('results')
                     ->where('academic_year_id', $acYear)
                     ->where('class_id', $class_id)
@@ -1309,11 +1048,6 @@ class MarkController extends Controller
                     ->where('academic_year_id', $acYear)
                     ->where('class_id', $class_id)
                     ->where('exam_id', $exam_id)
-                    ->delete();
-
-                DB::table('result_combines')
-                    ->where('exam_id', $exam_id)
-                    ->whereIn('registration_id', $studentIds)
                     ->delete();
 
                 DB::commit();
@@ -1432,7 +1166,6 @@ class MarkController extends Controller
             ->where('class_id', $current_class_id)
             ->where('exam_id', $exam_id)
             ->orderBy('subject_fail_count','asc')
-            ->orderBy('point','desc')
             ->orderBy('total_marks','desc')
             ->select('registration_id','subject_fail_count')
             ->with(['student' => function($q){

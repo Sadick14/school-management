@@ -62,7 +62,6 @@ class DemoAppDataSeeder extends Seeder
         \App\Result::truncate();
         \App\Leave::truncate();
         \Illuminate\Support\Facades\DB::table('result_publish')->truncate();
-        \Illuminate\Support\Facades\DB::table('result_combines')->truncate();
         \Illuminate\Support\Facades\DB::table('teacher_subjects')->truncate();
         \Illuminate\Support\Facades\DB::table('student_subjects')->truncate();
 

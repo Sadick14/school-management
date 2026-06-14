@@ -610,38 +610,29 @@ export default class Academic {
                     '                            <table class="table table-bordered table-hover table-marks-and-result">\n' +
                     '                                <thead>\n' +
                     '                                <tr>\n' +
-                    '                                    <td rowspan="2" class="text-center">Subject</td>\n' +
-                    '                                    <td rowspan="2" class="text-center">Code</td>\n' +
-                    '                                    <td colspan="3" colspan="' + Object.keys(examData.marks_distribution).length + '" class="text-center">Marks</td>\n' +
-                    '                                    <td rowspan="2" class="text-center">Total Marks</td>\n' +
-                    '                                    <td rowspan="2" class="text-center">Grade</td>\n' +
-                    '                                    <td rowspan="2" class="text-center">Point</td>\n' +
-                    '                                </tr>\n';
-
-                html += '<tr>\n';
-                for (var mdType in examData.marks_distribution) {
-                    html += '<td>' + examData.marks_distribution[mdType] + '</td>\n';
-                }
-                html += '</tr></thead><tbody>\n';
+                    '                                    <td class="text-center">Subject</td>\n' +
+                    '                                    <td class="text-center">Code</td>\n' +
+                    '                                    <td class="text-center">CA Marks</td>\n' +
+                    '                                    <td class="text-center">Exam Marks</td>\n' +
+                    '                                    <td class="text-center">Total %</td>\n' +
+                    '                                    <td class="text-center">Grade</td>\n' +
+                    '                                </tr>\n' +
+                    '                                </thead><tbody>\n';
 
                 examData.marks.forEach(function (mark) {
                     var row = '<tr>';
                     row += `<td>${mark.subject.name}</td><td>${mark.subject.code}</td>`;
-                    var marksDistribution = JSON.parse(mark.marks);
-                    for (var mdType in examData.marks_distribution) {
-                        row += '<td>' + marksDistribution[mdType] + '</td>\n';
-                    }
-                    row += `<td>${mark.total_marks}</td><td>${mark.grade}</td><td>${mark.point}</td>`;
+                    row += `<td>${mark.ca_marks}</td><td>${mark.exam_marks}</td>`;
+                    row += `<td>${mark.total_marks}</td><td>${mark.grade}</td>`;
                     row += '</tr>';
 
                     html += row;
                 });
                 html += `<tfoot>
                         <tr>
-                            <td colspan="${Object.keys(examData.marks_distribution).length + 2}">Result</td>
+                            <td colspan="4">Result</td>
                             <td>${examData.result.total_marks}</td>
                             <td>${examData.result.grade}</td>
-                            <td>${examData.result.point}</td>
                         </tr>
                      </tfoot>`;
                 html += '</tbody></table>';
@@ -663,12 +654,10 @@ export default class Academic {
                 // console.log(res);
                 if (Object.keys(res).length) {
                     $('select[name="subject_id"]').empty().prepend('<option selected=""></option>').select2({ placeholder: 'Pick a subject...', data: res });
-                    $('select[name="combine_subject_id"]').empty().prepend('<option selected=""></option>').select2({ placeholder: 'Pick a subject...', data: res });
                 }
                 else {
                     // clear subject list dropdown
                     $('select[name="subject_id"]').empty().select2({ placeholder: 'Pick a subject...' });
-                    $('select[name="combine_subject_id"]').empty().select2({ placeholder: 'Pick a subject...' });
                     toastr.warning('This class have no subject!');
                 }
                 Generic.loaderStop();
@@ -680,108 +669,20 @@ export default class Academic {
         });
 
         $('select[name="exam_id"]').on('change', function () {
-            $('#distributionTypeTable tbody').empty();
+            $('#exam_weight_info').val('');
             if ($(this).val()) {
                 let getUrl = window.exam_details_url + "?exam_id=" + $(this).val();
                 Generic.loaderStart();
                 axios.get(getUrl)
                     .then((response) => {
                         // console.log(response.data);
-                        response.data.forEach(function (item) {
-                            let trrow = '<tr>\n' +
-                                ' <td>\n' +
-                                ' <span>' + item.text + '</span>\n' +
-                                ' <input type="hidden" name="type[]" value="' + item.id + '">\n' +
-                                ' </td>\n' +
-                                ' <td>\n' +
-                                '<input type="number" class="form-control" name="total_marks[]" value="" required min="0">\n' +
-                                '</td>\n' +
-                                ' <td>\n' +
-                                '<input type="number" class="form-control" name="pass_marks[]" value="0" required min="0">\n' +
-                                '</td>\n' +
-                                '</tr>';
-
-                            $('#distributionTypeTable tbody').append(trrow);
-                        });
+                        $('#exam_weight_info').val('CA: ' + response.data.ca_weight + '% / Exam: ' + response.data.exam_weight + '%');
                         Generic.loaderStop();
                     }).catch((error) => {
                     let status = error.response.statusText;
                     toastr.error(status);
                     Generic.loaderStop();
                 });
-            }
-        });
-
-        function fetchGradeInfo() {
-            $('input[name="total_exam_marks"]').val('');
-            $('input[name="over_all_pass"]').val('');
-            let gradeId = $('select[name="grade_id"]').val();
-            if (gradeId) {
-                let getUrl = window.grade_details_url + "?grade_id=" + gradeId;
-                Generic.loaderStart();
-                axios.get(getUrl)
-                    .then((response) => {
-                        // console.log(response.data);
-                        $('input[name="total_exam_marks"]').val(response.data.totalMarks);
-                        $('input[name="over_all_pass"]').val(response.data.passingMarks);
-                        Generic.loaderStop();
-                    }).catch((error) => {
-                    let status = error.response.statusText;
-                    toastr.error(status);
-                    Generic.loaderStop();
-                });
-            }
-        }
-
-        $('select[name="grade_id"]').on('change', function () {
-            fetchGradeInfo();
-        });
-        $('select[name="combine_subject_id"]').on('change', function () {
-            let subjectId = $('select[name="subject_id"]').val();
-            let combineSujectId = $(this).val();
-
-            if (subjectId == combineSujectId) {
-                toastr.error("Same subject can not be a combine subject!");
-                $('select[name="combine_subject_id"]').val('').trigger('change');
-            }
-        });
-        $('select[name="passing_rule"]').on('change', function () {
-            let passingRule = $(this).val();
-            if (passingRule == 2) {
-                // individual pass
-                $('input[name="over_all_pass"]').val(0);
-                $('input[name="pass_marks[]"]').prop('readonly', false);
-                $('input[name="pass_marks[]"]').val(0);
-            }
-            else {
-                if ($('input[name="over_all_pass"]').val() == 0) {
-                    fetchGradeInfo();
-                }
-                $('.overAllPassDiv').show();
-            }
-
-            if (passingRule == 1) {
-                $('input[name="pass_marks[]"]').prop('readonly', true);
-            }
-            else {
-                $('input[name="pass_marks[]"]').prop('readonly', false);
-                $('input[name="pass_marks[]"]').val(0);
-            }
-        });
-
-        //
-        $('html').on('change keyup paste', 'input[name="total_marks[]"]', function () {
-            let grandTotalMakrs = parseInt($('input[name="total_exam_marks"]').val());
-            let distributionTotalMarks = 0;
-            $('input[name="total_marks[]"]').each(function (index, element) {
-                if ($(element).val().length) {
-                    distributionTotalMarks += parseInt($(element).val());
-                }
-            });
-            // console.log(grandTotalMakrs, distributionTotalMarks);
-            if (distributionTotalMarks > grandTotalMakrs) {
-                toastr.error("Marks distribution is wrong! Not match with total marks.");
-                $('input[name="total_marks[]"]').val(0);
             }
         });
 
@@ -905,25 +806,40 @@ export default class Academic {
 
         });
 
-        $('input[type="number"]').on('change keyup paste', function () {
-            let marksElements = $(this).closest('tr').find('input[type="number"]');
-            let totalMarks = 0;
-            marksElements.each(function (index, element) {
-                let marks = parseFloat($(element).val());
-                if (marks) {
-                    totalMarks += marks;
-                }
-            });
-            $(this).closest('tr').find('input.totalMarks').val(totalMarks.toFixed(2));
+        function recalcTotalPercent($row) {
+            let $caInput = $row.find('.ca-marks-input');
+            let $examInput = $row.find('.exam-marks-input');
+            let caMax = parseFloat($caInput.attr('max')) || 0;
+            let examMax = parseFloat($examInput.attr('max')) || 0;
+            let caWeight = parseFloat($row.closest('table').attr('data-ca-weight')) || 0;
+            let examWeight = 100 - caWeight;
+
+            let caMarks = parseFloat($caInput.val());
+            let examMarks = parseFloat($examInput.val());
+            if (isNaN(caMarks)) caMarks = 0;
+            if (isNaN(examMarks)) examMarks = 0;
+
+            let caPercent = caMax ? (caMarks / caMax) * 100 : 0;
+            let examPercent = examMax ? (examMarks / examMax) * 100 : 0;
+
+            let totalPercent = Math.ceil((caPercent * caWeight / 100) + (examPercent * examWeight / 100));
+            totalPercent = Math.min(Math.max(totalPercent, 0), 100);
+
+            $row.find('input.totalMarks').val(totalPercent);
+        }
+
+        $('html').on('change keyup paste', '.ca-marks-input, .exam-marks-input', function () {
+            recalcTotalPercent($(this).closest('tr'));
         });
 
         $('input[type="checkbox"]').on('ifChecked ifUnchecked', function(event) {
+            let $row = $(this).closest('tr');
             if (event.type == 'ifChecked') {
-                $(this).closest('tr').find('input[type="number"]').val(0).prop('readonly', true);
-                $(this).closest('tr').find('input.totalMarks').val(0);
+                $row.find('.ca-marks-input, .exam-marks-input').val(0).prop('readonly', true);
+                $row.find('input.totalMarks').val(0);
             } else {
-                $(this).closest('tr').find('input[type="number"]').val('').prop('readonly', false);
-                $(this).closest('tr').find('input.totalMarks').val(0);
+                $row.find('.ca-marks-input, .exam-marks-input').val('').prop('readonly', false);
+                $row.find('input.totalMarks').val(0);
             }
         });
 

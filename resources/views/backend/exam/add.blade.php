@@ -49,24 +49,20 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group has-feedback">
-                                    <label for="elective_subject_point_addition">Elective Subject Point Above Addition
-                                        <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="If some class have elective/4th subject then mention low scale point. Above that scale points will be added with the regular grade. If don't need then leave as it is."></i>
+                                    <label for="ca_weight">CA Weight (%)<span class="text-danger">*</span>
+                                        <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="The percentage weight given to Continuous Assessment (CA) marks when calculating a subject's final percentage. The remaining percentage is the Exam weight."></i>
                                     </label>
-                                    <input  type="number" class="form-control" name="elective_subject_point_addition" placeholder="sender_id" value="@if($exam){{ $exam->elective_subject_point_addition }}@else{{0}}@endif">
-                                    <span class="fa fa-id-card form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('elective_subject_point_addition') }}</span>
+                                    <input id="ca_weight" type="number" min="0" max="100" class="form-control" name="ca_weight" placeholder="CA Weight" value="@if($exam){{ $exam->ca_weight }}@else{{30}}@endif" required>
+                                    <span class="fa fa-percent form-control-feedback"></span>
+                                    <span class="text-danger">{{ $errors->first('ca_weight') }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group has-feedback">
-                                    <label for="marks_distribution_types">Marks Distribution Types<span class="text-danger">*</span>
-                                        <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Each subject total marks is divided in multiple categories."></i>
-                                    </label>
-                                    {!! Form::select('marks_distribution_types[]', AppHelper::MARKS_DISTRIBUTION_TYPES, $marksDistributionTypes , ['class' => 'form-control select2', 'multiple'=>'true', 'required' => 'true']) !!}
-                                    <span class="form-control-feedback"></span>
-                                    <span class="text-danger">{{ $errors->first('marks_distribution_types') }}</span>
+                                    <label for="exam_weight_display">Exam Weight (%)</label>
+                                    <input id="exam_weight_display" type="text" class="form-control" readonly>
                                 </div>
                             </div>
 
@@ -105,6 +101,21 @@
     <script type="text/javascript">
         $(document).ready(function () {
            Generic.initCommonPageJS();
+
+           var $caWeight = $('#ca_weight');
+           var $examWeightDisplay = $('#exam_weight_display');
+
+           var updateExamWeight = function () {
+               var caWeight = parseInt($caWeight.val(), 10);
+               if (isNaN(caWeight)) {
+                   $examWeightDisplay.val('');
+                   return;
+               }
+               $examWeightDisplay.val((100 - caWeight) + '%');
+           };
+
+           $caWeight.on('input change keyup', updateExamWeight);
+           updateExamWeight();
         });
     </script>
 @endsection

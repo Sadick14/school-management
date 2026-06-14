@@ -44,7 +44,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group has-feedback">
-                                    <label for="marks_distribution_types">Grading Rules<span class="text-danger">*</span>
+                                    <label>Grading Rules<span class="text-danger">*</span>
                                     </label>
                                     <table class="table table-striped table-bordered haveForm">
                                         <thead>
@@ -53,7 +53,7 @@
                                                 Grade
                                             </th>
                                             <th>
-                                                Point
+                                                Remark
                                             </th>
                                             <th>
                                                 Marks From
@@ -64,15 +64,24 @@
                                         </tr>
                                         </thead>
                                         <tbody>
-                                            @if($grade)
-                                                @php
+                                            @php
+                                                $defaultRanges = [
+                                                    1 => ['marks_from' => 80, 'marks_upto' => 100],
+                                                    2 => ['marks_from' => 70, 'marks_upto' => 79],
+                                                    3 => ['marks_from' => 60, 'marks_upto' => 69],
+                                                    4 => ['marks_from' => 50, 'marks_upto' => 59],
+                                                    5 => ['marks_from' => 40, 'marks_upto' => 49],
+                                                    6 => ['marks_from' => 0, 'marks_upto' => 39],
+                                                ];
+
+                                                $formatedRules = [];
+                                                if($grade){
                                                     $rules = json_decode($grade->rules);
-                                                    $formatedRules = [];
                                                     foreach ($rules as $rule){
-                                                        $formatedRules[$rule->grade] = ['point' => $rule->point,'marks_from' => $rule->marks_from,'marks_upto' => $rule->marks_upto];
+                                                        $formatedRules[$rule->grade] = ['marks_from' => $rule->marks_from,'marks_upto' => $rule->marks_upto];
                                                     }
-                                                @endphp
-                                            @endif
+                                                }
+                                            @endphp
                                             @foreach(AppHelper::GRADE_TYPES as $key => $rgrade)
                                                 <tr>
                                                     <td>
@@ -80,20 +89,19 @@
                                                         <input type="hidden" name="grade[]" value="{{$key}}">
                                                     </td>
                                                     <td>
-                                                        <input type="number" class="form-control" name="point[]" value="@if($grade){{$formatedRules[$key]['point']}}@else{{0}}@endif" placeholder="" required min="0">
+                                                        <span>{{ AppHelper::GRADE_REMARKS[$key] }}</span>
                                                     </td>
                                                     <td>
-                                                        <input type="number" class="form-control" name="marks_from[]" value="@if($grade){{$formatedRules[$key]['marks_from']}}@else{{0}}@endif" placeholder="" required min="0">
+                                                        <input type="number" class="form-control" name="marks_from[]" value="@if($grade){{$formatedRules[$key]['marks_from']}}@else{{$defaultRanges[$key]['marks_from']}}@endif" placeholder="" required min="0" max="100">
                                                     </td>
                                                     <td>
-                                                        <input type="number" class="form-control" name="marks_upto[]" value="@if($grade){{$formatedRules[$key]['marks_upto']}}@else{{0}}@endif" placeholder="" required min="0">
+                                                        <input type="number" class="form-control" name="marks_upto[]" value="@if($grade){{$formatedRules[$key]['marks_upto']}}@else{{$defaultRanges[$key]['marks_upto']}}@endif" placeholder="" required min="0" max="100">
                                                     </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
                                     <span class="text-danger">{{ $errors->first('grade') }}</span>
-                                    <span class="text-danger">{{ $errors->first('point') }}</span>
                                     <span class="text-danger">{{ $errors->first('marks_from') }}</span>
                                     <span class="text-danger">{{ $errors->first('marks_upto') }}</span>
                                 </div>

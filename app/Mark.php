@@ -24,10 +24,10 @@ class Mark extends Model
         'registration_id',
         'exam_id',
         'subject_id',
-        'marks',
+        'ca_marks',
+        'exam_marks',
         'total_marks',
         'grade',
-        'point',
         'present',
     ];
 
