@@ -19,12 +19,12 @@ class BackupDatabase extends Command
             mkdir($backupDir, 0755, true);
         }
 
-        $dayName = strtolower(Carbon::now()->format('l'));
-        $backupFile = "{$backupDir}/database-{$dayName}.sqlite";
+        $date = Carbon::now()->format('Y-m-d');
+        $backupFile = "{$backupDir}/database-{$date}.sqlite";
 
         if (file_exists($dbPath)) {
             copy($dbPath, $backupFile);
-            $this->info("✓ Database backed up to: database-{$dayName}.sqlite");
+            $this->info("✓ Database backed up to: database-{$date}.sqlite");
         } else {
             $this->error("✗ Database file not found at: {$dbPath}");
         }
