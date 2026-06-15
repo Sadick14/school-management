@@ -260,8 +260,9 @@ class PaymentController extends Controller
         ])->findOrFail($id);
 
         $appSettings = AppHelper::getAppSettings();
+        $activeTerm = AppHelper::getActiveTerm($payment->academic_year_id);
 
-        $pdf = PDF::loadView('backend.finance.payment.receipt_print', compact('payment', 'appSettings'))
+        $pdf = PDF::loadView('backend.finance.payment.receipt_print', compact('payment', 'appSettings', 'activeTerm'))
             ->setPaper('a5', 'portrait');
 
         $filename = 'receipt-' . $payment->receipt_no . '.pdf';

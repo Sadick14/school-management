@@ -102,7 +102,12 @@
             </td>
             <td>
                 <span class="label">Academic Year</span>
-                <span class="value">{{ $payment->academicYear->title ?? '' }}</span>
+                <span class="value">
+                    {{ $payment->academicYear->title ?? '' }}
+                    @if($activeTerm)
+                        - {{ $activeTerm->name }}
+                    @endif
+                </span>
             </td>
         </tr>
     </table>
