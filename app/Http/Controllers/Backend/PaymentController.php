@@ -14,6 +14,7 @@ use App\Services\BillingService;
 use App\StudentLedger;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PDF;
 
 class PaymentController extends Controller
@@ -272,6 +273,72 @@ class PaymentController extends Controller
         }
 
         return $pdf->stream($filename);
+    }
+
+    public function edit($id)
+    {
+        $payment = FeePayment::with([
+            'items.ledger.feeType',
+            'student',
+            'registration.class',
+        ])->findOrFail($id);
+
+        $ledgers = collect();
+        if ($payment->registration_id) {
+            $ledgers = StudentLedger::with('feeType')
+                ->where('registration_id', $payment->registration_id)
+                ->where('academic_year_id', $payment->academic_year_id)
+                ->where('status', AppHelper::ACTIVE)
+                ->get();
+        }
+
+        return view('backend.finance.payment.edit', compact('payment', 'ledgers'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $payment = FeePayment::with('items')->findOrFail($id);
+
+        $this->validate($request, [
+            'items' => 'required|array',
+            'items.*.id' => 'required|integer|exists:fee_payment_items,id',
+            'items.*.student_ledger_id' => 'required|integer|exists:student_ledgers,id',
+        ]);
+
+        DB::transaction(function () use ($request, $payment) {
+            foreach ($request->get('items') as $itemData) {
+                $item = $payment->items->firstWhere('id', (int) $itemData['id']);
+                $newLedgerId = (int) $itemData['student_ledger_id'];
+
+                if (!$item || $newLedgerId == $item->student_ledger_id) {
+                    continue;
+                }
+
+                $newLedger = StudentLedger::lockForUpdate()
+                    ->where('registration_id', $payment->registration_id)
+                    ->find($newLedgerId);
+
+                if (!$newLedger) {
+                    continue;
+                }
+
+                $oldLedger = StudentLedger::lockForUpdate()->find($item->student_ledger_id);
+                if ($oldLedger) {
+                    $oldLedger->amount_paid = bcsub($oldLedger->amount_paid, $item->amount_applied, 2);
+                    $oldLedger->balance = bcsub($oldLedger->amount, $oldLedger->amount_paid, 2);
+                    $oldLedger->save();
+                }
+
+                $newLedger->amount_paid = bcadd($newLedger->amount_paid, $item->amount_applied, 2);
+                $newLedger->balance = bcsub($newLedger->amount, $newLedger->amount_paid, 2);
+                $newLedger->save();
+
+                $item->student_ledger_id = $newLedgerId;
+                $item->save();
+            }
+        });
+
+        return redirect()->route('finance.payment.index')->with('success', 'Payment updated.');
     }
 
     public function generateBilling(Request $request)

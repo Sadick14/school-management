@@ -70,6 +70,7 @@
                                             <div class="btn-group">
                                                 <a target="_blank" href="{{ URL::route('finance.payment.receipt', $payment->id) }}" class="btn btn-info btn-sm" title="View Receipt"><i class="fa fa-eye"></i></a>
                                                 <a href="{{ URL::route('finance.payment.receipt', $payment->id) }}?download=1" class="btn btn-default btn-sm" title="Download Receipt"><i class="fa fa-download"></i></a>
+                                                <a href="{{ URL::route('finance.payment.edit', $payment->id) }}" class="btn btn-warning btn-sm" title="Edit Fee Type"><i class="fa fa-edit"></i></a>
                                             </div>
                                         </td>
                                     </tr>

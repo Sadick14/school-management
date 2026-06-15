@@ -339,6 +339,8 @@ Route::group(
     Route::post('finance/payment/dues', 'PaymentController@getDues')->name('finance.payment.dues');
     Route::post('finance/payment/store', 'PaymentController@store')->name('finance.payment.store');
     Route::get('finance/payment/receipt/{id}', 'PaymentController@receipt')->name('finance.payment.receipt');
+    Route::get('finance/payment/{id}/edit', 'PaymentController@edit')->name('finance.payment.edit');
+    Route::post('finance/payment/{id}/edit', 'PaymentController@update')->name('finance.payment.update');
     Route::post('finance/payment/generate-billing', 'PaymentController@generateBilling')->name('finance.payment.generate_billing');
     Route::post('finance/payment/get-class-students', 'PaymentController@getClassStudents')->name('finance.get_class_students');
     Route::post('finance/payment/record-bulk', 'PaymentController@recordBulkPayments')->name('finance.record_bulk_payments');
