@@ -33,7 +33,13 @@ class AcademicTermController extends Controller
             ->orderBy('id', 'desc')
             ->pluck('title', 'id');
 
-        return view('backend.finance.term.list', compact('terms', 'academicYears', 'academicYearId'));
+        $currentTermIds = $terms->pluck('academic_year_id')->unique()
+            ->mapWithKeys(function ($yearId) {
+                $term = AppHelper::getActiveTerm($yearId);
+                return [$yearId => $term ? $term->id : null];
+            });
+
+        return view('backend.finance.term.list', compact('terms', 'academicYears', 'academicYearId', 'currentTermIds'));
     }
 
     public function create(Request $request, $id = 0)

@@ -38,6 +38,7 @@
                                     <th>Start Date</th>
                                     <th>End Date</th>
                                     <th>Status</th>
+                                    <th>Current Term</th>
                                     <th class="notexport">Action</th>
                                 </tr>
                                 </thead>
@@ -50,6 +51,11 @@
                                         <td>{{ $term->start_date ? $term->start_date->format('d/m/Y') : '' }}</td>
                                         <td>{{ $term->end_date ? $term->end_date->format('d/m/Y') : '' }}</td>
                                         <td>{{ $term->status == AppHelper::ACTIVE ? 'Active' : 'Inactive' }}</td>
+                                        <td>
+                                            @if(($currentTermIds[$term->academic_year_id] ?? null) == $term->id)
+                                                <span class="label label-success">Current</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             <a title="Edit" href="{{ URL::route('finance.term.edit', $term->id) }}" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
                                             <form class="myAction" method="POST" action="{{ URL::route('finance.term.destroy') }}">
