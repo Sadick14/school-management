@@ -1,7 +1,9 @@
 # Production setup script for the School Management System.
 #
 # Run this from the project root AFTER `git clone`, on a machine that has
-# PHP (7.2+), Composer, and Node.js/npm available (e.g. via Laravel Herd).
+# PHP (7.2+) and Composer available (e.g. via Laravel Herd).
+# Built CSS/JS assets are committed to the repo, so Node.js/npm is NOT
+# required for a normal setup.
 #
 #   cd school-management
 #   .\setup-production.ps1
@@ -30,16 +32,6 @@ if ($envContent -notmatch "APP_KEY=base64:") {
     Write-Host "`nGenerating application key..." -ForegroundColor Cyan
     php artisan key:generate --force
 }
-
-# 4. JS dependencies and asset build
-Write-Host "`nInstalling JS dependencies..." -ForegroundColor Cyan
-npm install
-
-Write-Host "`nBuilding backend assets..." -ForegroundColor Cyan
-npm run backend-prod
-
-Write-Host "`nBuilding frontend assets..." -ForegroundColor Cyan
-npm run frontend-prod
 
 # 5. SQLite database file
 $dbPath = "database\database.sqlite"

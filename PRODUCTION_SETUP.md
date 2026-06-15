@@ -9,9 +9,11 @@ Install on the laptop first:
 
 - **[Laravel Herd](https://herd.laravel.com/)** (free) - provides PHP, runs the
   site, and gives it a local URL (e.g. `http://school-management.test`).
-  Alternatively any stack with PHP 7.2+, Composer and Node.js/npm.
+  Alternatively any stack with PHP 7.2+ and Composer.
 - **[Git](https://git-scm.com/download/win)**
-- **[Node.js](https://nodejs.org/)** (LTS) - includes npm
+
+Node.js/npm is **not** required - built CSS/JS assets are committed to the
+repo (`public/css`, `public/js`, `public/frontend`).
 
 ## 2. Clone the repository
 
@@ -35,10 +37,9 @@ This will:
    debug off, SQLite database).
 2. Install PHP dependencies (`composer install --no-dev`).
 3. Generate the application key.
-4. Install JS dependencies and build production assets.
-5. Create an empty SQLite database file (if none exists) and run migrations.
-6. Create the `public/storage` symlink (for uploaded logos/files).
-7. Cache config, routes and views for performance.
+4. Create an empty SQLite database file (if none exists) and run migrations.
+5. Create the `public/storage` symlink (for uploaded logos/files).
+6. Cache config, routes and views for performance.
 
 ## 3b. Or run the steps manually
 
@@ -54,11 +55,6 @@ composer install --no-dev --optimize-autoloader
 
 # Generate app key (skip if .env already has APP_KEY=base64:...)
 php artisan key:generate --force
-
-# Install JS dependencies and build assets
-npm install
-npm run backend-prod
-npm run frontend-prod
 
 # Create an empty SQLite database (skip if copying one over, see step 4)
 New-Item -ItemType File -Path "database\database.sqlite"
@@ -111,9 +107,6 @@ To pull future updates from GitHub and re-apply them:
 ```powershell
 git pull
 composer install --no-dev --optimize-autoloader
-npm install
-npm run backend-prod
-npm run frontend-prod
 php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
