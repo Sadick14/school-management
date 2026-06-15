@@ -158,11 +158,6 @@ class BillingService
             return 0;
         }
 
-        $structure = $this->getStructureForRegistration($registration, $feeType->id);
-        if (!$structure) {
-            return 0;
-        }
-
         $wallet = StudentLedger::where('registration_id', $registration->id)
             ->where('fee_type_id', $feeType->id)
             ->whereNull('term_id')
@@ -179,6 +174,11 @@ class BillingService
                 'amount' => 0,
                 'source' => 'auto',
             ]);
+        }
+
+        $structure = $this->getStructureForRegistration($registration, $feeType->id);
+        if (!$structure) {
+            return 0;
         }
 
         $start = Carbon::parse($dateFrom)->startOfDay();
