@@ -24,7 +24,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('backup:database')->daily()->at('02:00');
+        // Manual backups available via dashboard button
     }
 
     /**
