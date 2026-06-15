@@ -187,6 +187,10 @@ h1, h2, h3, h4, h5, h6, .logo-text, .x_title h3 {
     padding-left: 10px !important;
     margin: 0 !important;
 }
+.sidebar-menu .treeview-menu > li {
+    background: transparent !important;
+    margin: 0 !important;
+}
 .sidebar-menu .treeview-menu > li > a {
     color: $color-text-muted !important;
     font-size: 13px !important;
