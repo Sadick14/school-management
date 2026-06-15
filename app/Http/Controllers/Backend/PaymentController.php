@@ -521,31 +521,28 @@ class PaymentController extends Controller
                     'note' => 'Recorded from past payments',
                 ]);
 
-                $schoolFeeType = FeeType::where('code', 'SCHOOL')->first();
-                if ($schoolFeeType) {
-                    $ledgers = StudentLedger::where('registration_id', $registration->id)
-                        ->where('fee_type_id', $schoolFeeType->id)
-                        ->where('balance', '>', 0)
-                        ->orderBy('billing_date')
-                        ->limit(1)
-                        ->get();
+                $ledgers = StudentLedger::where('registration_id', $registration->id)
+                    ->where('balance', '>', 0)
+                    ->orderBy('term_id', 'asc')
+                    ->orderBy('billing_date', 'asc')
+                    ->orderBy('fee_type_id', 'asc')
+                    ->get();
 
-                    foreach ($ledgers as $ledger) {
-                        if ($amount <= 0) break;
+                foreach ($ledgers as $ledger) {
+                    if ($amount <= 0) break;
 
-                        $amountApplied = min($amount, $ledger->balance);
-                        $ledger->update([
-                            'amount_paid' => $ledger->amount_paid + $amountApplied,
-                            'balance' => $ledger->balance - $amountApplied,
-                        ]);
+                    $amountApplied = min($amount, $ledger->balance);
+                    $ledger->update([
+                        'amount_paid' => $ledger->amount_paid + $amountApplied,
+                        'balance' => $ledger->balance - $amountApplied,
+                    ]);
 
-                        $feePayment->items()->create([
-                            'student_ledger_id' => $ledger->id,
-                            'amount_applied' => $amountApplied,
-                        ]);
+                    $feePayment->items()->create([
+                        'student_ledger_id' => $ledger->id,
+                        'amount_applied' => $amountApplied,
+                    ]);
 
-                        $amount -= $amountApplied;
-                    }
+                    $amount -= $amountApplied;
                 }
 
                 $recorded++;
