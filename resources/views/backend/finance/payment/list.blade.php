@@ -21,6 +21,16 @@
                             </select>
                         </form>
                         <div class="box-tools pull-right">
+                            <form method="get" action="{{ URL::route('finance.payment.history') }}" target="_blank" class="form-inline" style="display: inline-block;">
+                                <input type="hidden" name="academic_year_id" value="{{ $academicYearId }}">
+                                <select name="class_id" class="form-control select2" required style="width: 160px; display: inline-block;">
+                                    <option value="">Select Class...</option>
+                                    @foreach($classes as $id => $name)
+                                        <option value="{{ $id }}">{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="btn btn-warning btn-sm"><i class="fa fa-print"></i> Print Payment History</button>
+                            </form>
                             <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#bulkRecordPaymentsModal">
                                 <i class="fa fa-history"></i> Record Past Payments
                             </button>

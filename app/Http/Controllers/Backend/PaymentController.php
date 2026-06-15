@@ -275,6 +275,47 @@ class PaymentController extends Controller
         return $pdf->stream($filename);
     }
 
+    public function history(Request $request)
+    {
+        $this->validate($request, [
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
+            'class_id' => 'required|integer|exists:i_classes,id',
+            'section_id' => 'nullable|integer',
+        ]);
+
+        $academicYearId = $request->get('academic_year_id');
+        $classId = $request->get('class_id');
+
+        $registrations = Registration::where('academic_year_id', $academicYearId)
+            ->where('class_id', $classId)
+            ->section($request->get('section_id'))
+            ->where('status', AppHelper::ACTIVE)
+            ->with(['student', 'class', 'section'])
+            ->orderBy('roll_no', 'asc')
+            ->get();
+
+        $payments = FeePayment::with('items.ledger.feeType')
+            ->whereIn('registration_id', $registrations->pluck('id'))
+            ->orderBy('payment_date', 'asc')
+            ->get()
+            ->groupBy('registration_id');
+
+        $academicYear = AcademicYear::find($academicYearId);
+        $appSettings = AppHelper::getAppSettings();
+
+        $pdf = PDF::loadView('backend.finance.payment.history_print', compact('registrations', 'payments', 'academicYear', 'appSettings'))
+            ->setPaper('a4', 'portrait');
+
+        $className = $registrations->first() && $registrations->first()->class ? $registrations->first()->class->name : 'class';
+        $filename = 'payment-history-' . str_replace(' ', '-', $className) . '.pdf';
+
+        if ($request->query('download')) {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
+    }
+
     public function edit($id)
     {
         $payment = FeePayment::with([
