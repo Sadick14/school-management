@@ -108,6 +108,9 @@ Route::group(
     Route::post('settings/report', 'SettingsController@report')
         ->name('settings.report');
 
+    // database backup
+    Route::post('backup/database', 'BackupController@backup')
+        ->name('backup.database');
 
     // administrator routes
     //academic year

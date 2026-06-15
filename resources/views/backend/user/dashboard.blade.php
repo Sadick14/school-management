@@ -54,6 +54,16 @@
             </svg>
         </div>
 
+        <!-- Quick Actions -->
+        <div class="row" style="margin-bottom: 20px;">
+            <div class="col-xs-12">
+                <button type="button" class="btn btn-primary" id="backupBtn" style="margin-right: 10px;">
+                    <i class="fa fa-download"></i> Backup Database
+                </button>
+                <span id="backupStatus"></span>
+            </div>
+        </div>
+
         @if($userRoleId == AppHelper::USER_ADMIN)
             <div class="row">
                 <div class="col-lg-3 col-sm-6 col-xs-12">
@@ -239,6 +249,30 @@
                 Finance.dashboardInit();
             }
             @endif
+
+            $('#backupBtn').on('click', function() {
+                var $btn = $(this);
+                var $status = $('#backupStatus');
+                $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Backing up...');
+                $status.html('');
+
+                $.ajax({
+                    url: '{{ route("backup.database") }}',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        $status.html('<span class="text-success"><i class="fa fa-check"></i> ' + response.message + '</span>');
+                        $btn.prop('disabled', false).html('<i class="fa fa-download"></i> Backup Database');
+                    },
+                    error: function(xhr) {
+                        var message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Backup failed';
+                        $status.html('<span class="text-danger"><i class="fa fa-times"></i> ' + message + '</span>');
+                        $btn.prop('disabled', false).html('<i class="fa fa-download"></i> Backup Database');
+                    }
+                });
+            });
 
         });
 
