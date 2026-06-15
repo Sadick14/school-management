@@ -31,9 +31,6 @@
                                 </select>
                                 <button type="submit" class="btn btn-warning btn-sm"><i class="fa fa-print"></i> Print Payment History</button>
                             </form>
-                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#bulkRecordPaymentsModal">
-                                <i class="fa fa-history"></i> Record Past Payments
-                            </button>
                             <a class="btn btn-add-new btn-sm" href="{{ URL::route('finance.payment.wizard') }}"><i class="fa fa-money"></i> Collect Payment</a>
                         </div>
                     </div>
