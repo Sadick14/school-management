@@ -13,4 +13,5 @@ yarn-error.log
 yarn.lock
 .env
 storage/debugbar
+storage/backups
 database/seeds/DevPermissionTableSeeder.php
