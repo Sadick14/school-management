@@ -460,7 +460,7 @@ h1, h2, h3, h4, h5, h6, .logo-text, .x_title h3 {
     border: 1px solid $color-border !important;
     box-shadow: 0 10px 25px $color-shadow !important;
     margin-bottom: 24px !important;
-    overflow: hidden;
+    overflow: visible !important;
 }
 .box-header {
     border-bottom: 1px solid $color-border !important;
